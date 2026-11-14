@@ -60,11 +60,12 @@ th{background:#f7f4ef}.tw{overflow:auto;max-height:60vh}
 </head>
 <body>
 <header><h1 style="display:flex;align-items:center;gap:6px">کابینت‌ساز <small>ArchTverse</small><span style="margin-inline-start:auto;display:flex;gap:4px"><button class="btn" data-ur="-1" title="Ctrl+Z">↶ برگشت</button><button class="btn" data-ur="1" title="Ctrl+Y">↷</button></span></h1>
-<nav id="nav"><button data-t="space" class="on">۱. فضا</button><button data-t="cab">۲. کابینت</button><button data-t="elv">۳. نماها</button><button data-t="dwg">۴. خروجی</button><button data-t="adv">جزئیات</button></nav></header>
+<nav id="nav"><button data-t="space" class="on">۱. فضا</button><button data-t="cab">۲. کابینت</button><button data-t="elv">۳. نماها</button><button data-t="dwg">۴. خروجی</button><button data-t="cost">۵. برآورد</button><button data-t="adv">جزئیات</button></nav></header>
 <main>
 <div id="edwrap" class="wrap"><div id="ed"><div class="tb" id="etb"></div><button class="btn fab" id="efab" style="display:none">🗑 حذف</button><div class="zm" style="position:absolute;bottom:8px;left:8px;display:flex;gap:4px;z-index:2"><button class="btn" data-z="1">＋</button><button class="btn" data-z="-1">－</button><button class="btn" data-z="0">⤢</button></div><svg id="esvg" xmlns="http://www.w3.org/2000/svg"><g id="eg"></g></svg></div><div id="side"></div></div>
 <section class="tab" id="t-elv"><div class="chips" id="vchips" style="margin:4px 0 8px"></div><div class="wrap"><div id="ved"><div class="tb" id="vtb"></div><button class="btn fab" id="vfab" style="display:none">🗑 حذف</button><div style="position:absolute;bottom:8px;left:8px;display:flex;gap:4px;z-index:2"><button class="btn" data-vz="1">＋</button><button class="btn" data-vz="-1">－</button><button class="btn" data-vz="0">⤢</button></div><div style="background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden"><svg id="vsvg" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:58vh;touch-action:none;user-select:none"><g id="vg"></g></svg></div></div><div id="vside"></div></div></section>
 <section class="tab" id="t-dwg"></section>
+<section class="tab" id="t-cost"></section>
 <section class="tab" id="t-adv"></section>
 </main>
 <div id="toast"></div>
@@ -73,7 +74,7 @@ th{background:#f7f4ef}.tw{overflow:auto;max-height:60vh}
 const DEF={proj:'KITCHEN-01',H:2800,wallT:200,style:'modern',
 poly:[[0,0],[4000,0],[4000,-3200],[0,-3200]],
 edges:[{w:1,cab:1,win:[{x:1500,w:1000,sill:1100,h:1200}],door:[]},{w:1,cab:0,win:[],door:[]},{w:1,cab:0,win:[],door:[{x:300,w:900,h:2100}]},{w:1,cab:1,win:[],door:[]}],
-preset:'L',door:'flat',handle:'gola',colB:'white',colW:'white',fin:'matte',top:'quartz',hfin:'black',man:{},sink:{e:0,x:1900},hob:{e:3,x:2000},fr:{e:3,x:375},isl:{on:0,x:1000,y:-1700,L:2000,D:1000},
+preset:'L',door:'flat',handle:'gola',colB:'white',colW:'white',fin:'matte',top:'quartz',hfin:'black',sheetL:3660,sheetW:1830,waste:15,prices:{},cur:'',site:'',profit:0,man:{},sink:{e:0,x:1900},hob:{e:3,x:2000},fr:{e:3,x:375},isl:{on:0,x:1000,y:-1700,L:2000,D:1000},
 counterH:900,plinth:100,topT:40,baseD:600,wallD:350,splash:550,wallMode:'ceil',wallH:800,t:16,
 sinkW:800,dw:'R',waterH:550,drainH:450,hobW:600,hobType:'gas',gasH:550,frW:750,frH:1850,oven:0,ovenZ:850,sockH:1100,sockLowH:300};
 const TL={corner:'کنج کور',sink:'سینک',hob:'زیر گاز (کشو)',dw:'ماشین ظرفشویی',d1:'یک‌درب',d2:'دودرب',drw:'کشویی',pull:'سوپری باریک',filler:'فیلر',endp:'بغل‌بند جزیره',fridge:'محفظه یخچال',oven:'ستون فر',w1:'بالا یک‌درب',w2:'بالا دودرب',hood:'کابینت هود',open:'قفسه باز',void:'در/پنجره',glass:'دکور شیشه‌ای',drainer:'آبچکان',ovenb:'فر زیر گاز'};
@@ -428,8 +429,8 @@ function cutList(S,D){const t=S.t,rows=[],hw={};const H=(k,n)=>hw[k]=(hw[k]||0)+
    if(!nm||(f.k==='app'&&!f.panel)||(f.k==='fill'&&u.type==='fridge'))continue;add(nm,f.h,f.w,1,frontMat(u,S),'4');
    if(f.k==='door'){H('Hinge',f.h<=1000?2:f.h<=1600?3:4);H(HN(u,S),1);}if(f.k==='drw'){H('Drawer runner set',1);H(HN(u,S),1);}if(f.k==='flap'){H('Lift-up mechanism',1);H(HN(u,S),1);}if(f.panel)H('DW panel fixing kit',1);}}
  let a16=0,a3=0,eb1=0,eb4=0;for(const r of rows){const A=r.L*r.W*r.q/1e6;if(r.mat==='HDF3')a3+=A;else a16+=A*(r.mat.includes('x2')?2:1);if(r.eb==='1L')eb1+=r.L*r.q/1000;if(r.eb==='4')eb4+=2*(r.L+r.W)*r.q/1000;}
- const sheetA=1.83*3.66;let top=0;for(const R of D.runs)for(const[s0,s1]of counterSegs(R,1))top+=s1-s0;if(D.isl)top+=S.isl.L;
- return{rows,hw,a16,a3,sheets16:Math.ceil(a16/sheetA/0.85),sheets3:Math.ceil(a3/sheetA/0.9),eb1,eb4,top:top/1000};}
+ const sheetA=(S.sheetL||3660)*(S.sheetW||1830)/1e6,wf=1-(S.waste==null?15:S.waste)/100;let top=0;for(const R of D.runs)for(const[s0,s1]of counterSegs(R,1))top+=s1-s0;if(D.isl)top+=S.isl.L;
+ return{rows,hw,a16,a3,sheets16:Math.ceil(a16/sheetA/wf),sheets3:Math.ceil(a3/sheetA/wf),eb1,eb4,top:top/1000};}
 
 
 /* ---------- exporters ---------- */
@@ -484,7 +485,7 @@ function toPDF(sheets,S,D,C){const{jsPDF}=window.jspdf,doc=new jsPDF({orientatio
  y+=4;doc.setFontSize(11);doc.text('SERVICE POINTS (TO BE CONFIRMED)',x,y);y+=6;const xm=[0,22,36,52,66];
  row(['CODE','WALL','X','H','DESCRIPTION'],xm,1);for(const m of D.mep)row([m.c,m.wall,m.x,m.h,m.desc],xm);
  y+=4;doc.setFontSize(11);doc.text('MATERIAL SUMMARY',x,y);y+=6;
- row([`MDF 16mm: ${C.a16.toFixed(2)} m2  (~${C.sheets16} sheets 1830x3660 incl. 15% waste)`],[0]);row([`HDF 3mm back: ${C.a3.toFixed(2)} m2  (~${C.sheets3} sheets)`],[0]);
+ row([`MDF 16mm: ${C.a16.toFixed(2)} m2  (~${C.sheets16} sheets ${S.sheetW||1830}x${S.sheetL||3660} incl. ${S.waste==null?15:S.waste}% waste)`],[0]);row([`HDF 3mm back: ${C.a3.toFixed(2)} m2  (~${C.sheets3} sheets)`],[0]);
  row([`Edge band carcass: ${C.eb1.toFixed(1)} m   /  fronts: ${C.eb4.toFixed(1)} m`],[0]);row([`Worktop length: ${C.top.toFixed(2)} m (depth ${S.baseD+20})`],[0]);
  for(const k in C.hw)row([`${k}: ${C.hw[k]}`],[0]);
  return doc.output('blob');}
@@ -525,6 +526,45 @@ function to3D(S,D,name){const V=[],O=[],mats={};let vi=1;const t=S.t||16,G=D.G;
  const obj=`# Kabinetsaz (ArchTverse) - units: millimetres, Y up\nmtllib ${name}.mtl\n`+V.join('\n')+'\n'+O.join('\n')+'\n';
  return{obj,mtl};}
 
+
+const HWFA={'Hinge':'لولا','Leg':'پایه کابینت','Shelf pin':'پین طبقه','Wall hanger (pair)':'آویز کابینت هوایی (جفت)','Drawer runner set':'ریل کشو (دست)','Lift-up mechanism':'جک بالابر','DW panel fixing kit':'کیت پنل ظرفشویی','Bar handle 128/160':'دستگیره میله‌ای','Knob':'دستگیره دکمه‌ای','Gola profile (per front)':'پروفیل گولا (هر درب)','Edge pull profile':'دستگیره پروفیلی','Push-to-open latch':'مگنت فشاری'};
+function boq(S,D,C){const A=(S.sheetL||3660)*(S.sheetW||1830)/1e6*(1-(S.waste==null?15:S.waste)/100);let aC=0,aF=0;
+ for(const r of C.rows){const a=r.L*r.W*r.q/1e6;if(r.mat==='HDF3')continue;if(/^MDF16 /.test(r.mat))aF+=a;else aC+=a*(r.mat.includes('x2')?2:1);}
+ const cnt=t=>D.all.filter(u=>u.type===t).length,lin=f=>D.all.filter(f).reduce((a,u)=>a+u.w,0)/1000,R=[],r2=x=>Math.round(x*100)/100;
+ const add=(g,k,name,qty,unit,en)=>{if(qty>0)R.push({g,k,name,qty:r2(qty),unit,en:en||k});};
+ const fin=(FINS.find(f=>f[0]===S.fin)||FINS[0]),top=(TOPS.find(t=>t[0]===S.top)||TOPS[0]);
+ add('مصالح','mdf','ورق MDF '+S.t+' بدنه ('+r2(aC)+' m²)',Math.ceil(aC/A),'ورق','MDF carcass sheet');
+ add('مصالح','front','ورق درب '+fin[1]+' ('+r2(aF)+' m²)',Math.ceil(aF/A),'ورق','Front sheet '+fin[2]);
+ add('مصالح','hdf','ورق HDF 3 پشت‌بند ('+r2(C.a3)+' m²)',Math.ceil(C.a3/A),'ورق','HDF back sheet');
+ add('مصالح','eb1','نوار PVC بدنه',Math.ceil(C.eb1),'متر','Edge band carcass');
+ add('مصالح','eb2','نوار PVC درب',Math.ceil(C.eb4),'متر','Edge band fronts');
+ add('مصالح','top','صفحه کابینت '+top[1],C.top,'متر','Worktop '+top[3]);
+ add('مصالح','plinth','پاخور (قرنیز پایین)',lin(u=>u.L==='b'&&u.type!=='endp'),'متر','Plinth');
+ if(D.G.cor)add('مصالح','cornice','تاج/قرنیز بالا',lin(u=>u.L==='w'||u.L==='t'),'متر','Cornice');
+ let hinges=0,handles=0,runners=0;
+ for(const k in C.hw){add('یراق','hw_'+k,HWFA[k]||k,C.hw[k],'عدد',k);if(k==='Hinge')hinges=C.hw[k];if(/handle|Knob|pull|Gola|Push/i.test(k))handles+=C.hw[k];if(/runner/i.test(k))runners=C.hw[k];}
+ const carc=D.all.filter(u=>!['filler','endp','dw','fridge'].includes(u.type)).length,wallN=D.all.filter(u=>u.L==='w'&&u.type!=='filler').length;
+ add('یراق','screw','پیچ (تقریبی: بدنه، لولا، دستگیره، ریل، نصب)',carc*16+hinges*4+handles*2+runners*12+wallN*4,'عدد','Screws (approx.)');
+ add('لوازم','sink','سینک',cnt('sink'),'عدد','Sink');add('لوازم','tap','شیر آشپزخانه',cnt('sink'),'عدد','Kitchen tap');
+ add('لوازم','hob','اجاق گاز صفحه‌ای',cnt('hob'),'عدد','Hob');add('لوازم','hood','هود',cnt('hood'),'عدد','Hood');
+ add('لوازم','oven','فر توکار',cnt('oven')+cnt('ovenb'),'عدد','Built-in oven');add('لوازم','dw','ماشین ظرفشویی',cnt('dw'),'عدد','Dishwasher');
+ add('لوازم','drainer','آبچکان',cnt('drainer'),'عدد','Dish rack');add('لوازم','fridge','یخچال',cnt('fridge'),'عدد','Fridge');
+ const lm=lin(u=>u.type!=='endp'&&u.type!=='filler');
+ add('دستمزد','lab_make','دستمزد ساخت (متر طول، زمینی + هوایی)',lm,'متر','Fabrication labour');
+ add('دستمزد','lab_inst','دستمزد نصب (متر طول)',lm,'متر','Installation labour');
+ add('دستمزد','lab_top','برش و نصب صفحه',C.top,'متر','Worktop fitting');
+ add('دستمزد','trans','حمل و نقل',1,'سرویس','Transport');
+ return R;}
+function boqTotal(S,rows){const P=S.prices||{};let s=0;for(const r of rows)s+=(+P[r.k]||0)*r.qty;return{sub:s,tot:s*(1+(+S.profit||0)/100)};}
+function boqCSV(S,D,C){const rows=boq(S,D,C),P=S.prices||{},t=boqTotal(S,rows),L=['Group,Item,Item (EN),Qty,Unit,Unit price,Total'+(S.cur?' ('+S.cur+')':'')];
+ for(const r of rows){const p=+P[r.k]||0;L.push([r.g,'"'+r.name+'"','"'+r.en+'"',r.qty,r.unit,p||'',p?Math.round(p*r.qty):''].join(','));}
+ L.push('');L.push(',,,,,Subtotal,'+Math.round(t.sub));L.push(',,,,,Overhead/profit %,'+(+S.profit||0));L.push(',,,,,TOTAL,'+Math.round(t.tot));
+ L.push('');L.push(`Sheet size,${S.sheetW||1830}x${S.sheetL||3660} mm,Waste %,${S.waste==null?15:S.waste}`);return '﻿'+L.join('\r\n');}
+function partsCSV(C,S){const L=['Part code,Unit,Part,Length mm,Width mm,Thickness mm,Qty,Material,Edge band'],n={};
+ for(const r of C.rows){const ab=r.part.replace(/[^A-Za-z]/g,'').slice(0,4).toUpperCase(),k=r.code+'-'+ab;n[k]=(n[k]||0)+1;const th=r.mat==='HDF3'?3:r.mat.includes('x2')?2*(S.t||16):(S.t||16);
+  L.push([k+'-'+n[k],r.code,r.part,r.L,r.W,th,r.q,r.mat,r.eb].join(','));}
+ L.push('');L.push('Hardware,Qty');for(const k in C.hw)L.push(k+','+C.hw[k]);return '﻿'+L.join('\r\n');}
+
 function svgInner(p){let s='';for(const q of p){const st=LS[q.ly]||LS.CAB,a=`stroke="${q.sc||st.c}" stroke-width="${st.w}" vector-effect="non-scaling-stroke"${st.d?' stroke-dasharray="40 30"':''} fill="${q.fc&&(q.c||q.t==='C')?q.fc:'none'}"`;
   if(q.t==='L')s+=`<line x1="${q.x1.toFixed(1)}" y1="${(-q.y1).toFixed(1)}" x2="${q.x2.toFixed(1)}" y2="${(-q.y2).toFixed(1)}" ${a}/>`;
   else if(q.t==='P')s+=`<${q.c?'polygon':'polyline'} points="${q.pts.map(v=>v[0].toFixed(1)+','+(-v[1]).toFixed(1)).join(' ')}" ${a}/>`;
@@ -541,7 +581,7 @@ let TAB='space',SEL=null,SNAP=true,VB=null,DRAG=null,CUR=null,dirty=true,DRAW=nu
 let HIST=[],FUT=[],LAST=JSON.stringify(S);
 const store=()=>{const cur=JSON.stringify(S);if(cur!==LAST){HIST.push(LAST);if(HIST.length>80)HIST.shift();FUT=[];LAST=cur;}try{localStorage.setItem('kab2',cur);}catch(e){}};
 function undoRedo(dir){const A=dir<0?HIST:FUT,B=dir<0?FUT:HIST;if(!A.length)return toast(dir<0?'مرحله قبلی نیست':'مرحله بعدی نیست');B.push(LAST);LAST=A.pop();S=JSON.parse(LAST);try{localStorage.setItem('kab2',LAST);}catch(e){}
- SEL=null;EV.sel=null;EV.drag=null;DRAG=null;compute();if(TAB==='elv')drawElv();else if(TAB==='dwg')drawDwg();else if(TAB==='adv')drawAdv();else{drawEditor();side();}toast(dir<0?'برگشت':'جلو');}
+ SEL=null;EV.sel=null;EV.drag=null;DRAG=null;compute();if(TAB==='elv')drawElv();else if(TAB==='dwg')drawDwg();else if(TAB==='cost')drawCost();else if(TAB==='adv')drawAdv();else{drawEditor();side();}toast(dir<0?'برگشت':'جلو');}
 addEventListener('keydown',ev=>{if(!(ev.ctrlKey||ev.metaKey)||ev.target.tagName==='INPUT')return;const k=ev.key.toLowerCase();if(k==='z'&&!ev.shiftKey){ev.preventDefault();undoRedo(-1);}else if(k==='y'||(k==='z'&&ev.shiftKey)){ev.preventDefault();undoRedo(1);}});
 document.addEventListener('click',ev=>{const b=ev.target.closest('[data-ur]');if(b)undoRedo(+b.dataset.ur);const l=ev.target.closest('[data-ly]');if(l){EV.layer=l.dataset.ly;EV.sel=null;drawEditor();side();}});
 function note(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(note.t);note.t=setTimeout(()=>t.classList.remove('on'),6000);}
@@ -727,7 +767,7 @@ async function save(name,data,mime){
 window.zm=(id,d)=>{const e=$(id);let z=Math.min(4,Math.max(1,(+e.dataset.z)+d));e.dataset.z=z;e.querySelector('svg').style.width=(z*100)+'%';};
 function full(){if(!CUR)return null;if(!CUR.sh){CUR.sh=buildSheets(S,CUR.D);CUR.C=cutList(S,CUR.D);}return CUR;}
 function drawDwg(){const c=full();if(!c){$('t-dwg').innerHTML='<div class="warn">خطا در طراحی</div>';return;}
- $('t-dwg').innerHTML=warnHTML()+`<div class="card"><h3>خروجی‌ها</h3><p class="row"><button class="btn p" data-x="dxf">DXF (اتوکد / مکس)</button><button class="btn p" data-x="pdf">PDF شیت‌های A3</button><button class="btn p" data-x="csv">لیست برش CSV</button><button class="btn p" data-x="obj">سه‌بعدی OBJ برای مکس (zip)</button></p><p class="hint">ارتفاع نقاط تأسیسات و ابعاد لوازم پیشنهادی‌اند و در نقشه «TO BE CONFIRMED» درج شده‌اند. اعداد ریزتر در تب «جزئیات».</p></div>`+
+ $('t-dwg').innerHTML=warnHTML()+`<div class="card"><h3>خروجی‌ها</h3><p class="row"><button class="btn p" data-xa="1" style="background:#1d1d1f;border-color:#1d1d1f">⬇ همه خروجی‌ها یکجا (zip)</button></p><p class="row"><button class="btn p" data-x="dxf">DXF (اتوکد / مکس)</button><button class="btn p" data-x="pdf">PDF شیت‌های A3</button><button class="btn p" data-x="csv">لیست برش CSV</button><button class="btn p" data-x="obj">سه‌بعدی OBJ برای مکس (zip)</button></p><p class="hint">ارتفاع نقاط تأسیسات و ابعاد لوازم پیشنهادی‌اند و در نقشه «TO BE CONFIRMED» درج شده‌اند. اعداد ریزتر در تب «جزئیات».</p></div>`+
  c.sh.map((sh,k)=>`<div class="sheet"><div class="bar">${sh.title}<span><button onclick="zm('sv${k}',-1)">−</button> <button onclick="zm('sv${k}',1)">+</button></span></div><div class="sv" id="sv${k}" data-z="1">${toSVG(sh)}</div></div>`).join('');}
 $('t-dwg').addEventListener('click',ev=>{const x=ev.target.dataset.x;if(!x)return;const c=full();if(!c)return;
  if(x==='dxf')save(S.proj+'_kitchen.dxf',toDXF(c.sh,S),'application/dxf');
@@ -879,9 +919,26 @@ const vChange=ev=>{const k=ev.target.dataset.vk;if(!k)return;const it=TAB==='elv
  if(k==='cfg'||k==='ds'||k==='hd'||k==='col'){if(ev.target.value)o[k]=ev.target.value;else delete o[k];}
  after(it,o);};
 $('vside').addEventListener('change',vChange);$('side').addEventListener('change',vChange);
+async function exportAll(){const c=full();if(!c)return;toast('در حال ساخت بسته…');const nm=S.proj,r=to3D(S,c.D,nm+'_3d');
+ const files=[[nm+'_plan_elevations.dxf',toDXF(c.sh,S)],[nm+'_cutlist.csv',toCSV(c.C)],[nm+'_parts_codes.csv',partsCSV(c.C,S)],[nm+'_cost_estimate.csv',boqCSV(S,c.D,c.C)],[nm+'_3d.obj',r.obj],[nm+'_3d.mtl',r.mtl],[nm+'_project.json',JSON.stringify(S,null,1)]];
+ try{if(window.jspdf)files.unshift([nm+'_drawings.pdf',new Uint8Array(await toPDF(c.sh,S,c.D,c.C).arrayBuffer())]);}catch(e){console.error(e);}
+ save(nm+'_ALL.zip',zipStore(files),'application/zip');}
+document.addEventListener('click',ev=>{const t=ev.target.closest('[data-xa],[data-cx]');if(!t)return;const c=full();if(!c)return;
+ if(t.dataset.xa)exportAll();else if(t.dataset.cx==='boq')save(S.proj+'_cost_estimate.csv',boqCSV(S,c.D,c.C),'text/csv');else if(t.dataset.cx==='parts')save(S.proj+'_parts_codes.csv',partsCSV(c.C,S),'text/csv');});
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+function drawCost(){const c=full();if(!c){$('t-cost').innerHTML='<div class="warn">خطا در طراحی</div>';return;}const rows=boq(S,c.D,c.C),P=S.prices||{},t=boqTotal(S,rows),cur=S.cur||'';let g='';
+ const q=r=>'https://www.google.com/search?q='+encodeURIComponent('قیمت '+r.name.replace(/\(.*?\)/g,'').trim()+(S.site?' site:'+S.site:''));
+ $('t-cost').innerHTML=`<div class="card"><h3>ابعاد ورق و تنظیمات</h3><div class="f"><label>طول ورق (mm)<input type="number" data-ck="sheetL" value="${S.sheetL}"></label><label>عرض ورق (mm)<input type="number" data-ck="sheetW" value="${S.sheetW}"></label><label>پرت برش (٪)<input type="number" data-ck="waste" value="${S.waste}"></label><label>واحد پول<input data-ck="cur" value="${cur}" placeholder="مثلاً دینار / تومان / $"></label><label>سایت قیمت (اختیاری)<input data-ck="site" value="${S.site||''}" placeholder="مثلاً digikala.com" dir="ltr"></label><label>سود و بالاسری (٪)<input type="number" data-ck="profit" value="${S.profit||0}"></label></div>
+ <p class="hint">تعداد ورق از روی متراژ قطعات و درصد پرت حساب می‌شود (چیدمان دقیق قطعات روی ورق نیست). قیمت‌ها را خودتان وارد کنید؛ 🔍 همان قلم را در گوگل${S.site?' داخل '+S.site:''} جست‌وجو می‌کند تا قیمت را ببینید و اینجا بنویسید.</p></div>
+ <div class="card"><h3>ریز متره و برآورد</h3><div class="tw" style="max-height:none"><table style="direction:rtl"><tr><th style="text-align:right">قلم</th><th>مقدار</th><th>واحد</th><th>قیمت واحد</th><th>جمع</th><th></th></tr>${rows.map(r=>{const p=+P[r.k]||0,h=r.g!==g?`<tr><th colspan="6" style="text-align:right;background:#efe9df">${g=r.g}</th></tr>`:'';return h+`<tr><td style="text-align:right;white-space:normal;min-width:150px">${r.name}</td><td>${r.qty}</td><td>${r.unit}</td><td><input type="number" inputmode="decimal" data-pk="${r.k}" value="${p||''}" style="width:95px;padding:4px"></td><td><b>${p?fmt(p*r.qty):'—'}</b></td><td><a href="${q(r)}" target="_blank" rel="noopener" style="text-decoration:none">🔍</a></td></tr>`;}).join('')}</table></div>
+ <div class="stats"><div>جمع اقلام<b>${fmt(t.sub)} ${cur}</b></div><div>سود و بالاسری ${+S.profit||0}٪<b>${fmt(t.tot-t.sub)} ${cur}</b></div><div style="background:#1d1d1f;color:#fff">برآورد کل<b>${fmt(t.tot)} ${cur}</b></div></div>
+ ${rows.some(r=>!(+P[r.k]))?'<p class="hint">ردیف‌هایی که قیمت ندارند در جمع حساب نشده‌اند.</p>':''}
+ <p class="row"><button class="btn p" data-cx="boq">دانلود برآورد (CSV)</button><button class="btn p" data-cx="parts">فایل کد قطعات (CSV)</button><button class="btn p" data-xa="1" style="background:#1d1d1f;border-color:#1d1d1f">⬇ همه خروجی‌ها یکجا (zip)</button></p></div>`;}
+$('t-cost').addEventListener('change',ev=>{const d=ev.target.dataset;if(d.pk){if(!S.prices)S.prices={};S.prices[d.pk]=+ev.target.value||0;}else if(d.ck){const k=d.ck;S[k]=typeof DEF[k]==='number'?Math.max(0,+ev.target.value||0):ev.target.value.trim();if((k==='sheetL'||k==='sheetW')&&S[k]<300)S[k]=DEF[k];if(k==='waste')S.waste=Math.min(60,S.waste);}else return;store();compute();drawCost();});
 function go(t){if(DRAW&&t!=='space'){DRAW=null;setVB();}TAB=t;SEL=null;EV.sel=null;EV.drag=null;document.querySelectorAll('#nav button').forEach(x=>x.classList.toggle('on',x.dataset.t===t));
  $('edwrap').style.display=t==='space'||t==='cab'?'':'none';$('t-dwg').classList.toggle('on',t==='dwg');$('t-adv').classList.toggle('on',t==='adv');$('t-elv').classList.toggle('on',t==='elv');
- if(t==='elv'){EV.sel=null;EV.vb=null;drawElv();}else if(t==='dwg')drawDwg();else if(t==='adv')drawAdv();else{drawEditor();side();}scrollTo(0,0);}
+ $('t-cost').classList.toggle('on',t==='cost');
+ if(t==='cost')drawCost();else if(t==='elv'){EV.sel=null;EV.vb=null;drawElv();}else if(t==='dwg')drawDwg();else if(t==='adv')drawAdv();else{drawEditor();side();}scrollTo(0,0);}
 document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>go(b.dataset.t));
 setVB();compute();go('space');}
 </script>
