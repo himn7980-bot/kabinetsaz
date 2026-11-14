@@ -1,0 +1,32 @@
+{
+  "name": "kabinetsaz",
+  "version": "1.0.0",
+  "description": "Kabinetsaz - kitchen cabinet designer by ArchTverse",
+  "author": "ArchTverse",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win nsis portable --publish never"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/core": "^6.1.2",
+    "@capacitor/filesystem": "^6.0.1",
+    "@capacitor/share": "^6.0.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.2",
+    "@capacitor/assets": "^3.0.5",
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.archtverse.kabinetsaz",
+    "productName": "Kabinetsaz",
+    "files": ["electron/**", "www/**"],
+    "directories": { "output": "dist" },
+    "win": { "icon": "icon.png" },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true },
+    "portable": { "artifactName": "Kabinetsaz-portable.exe" }
+  }
+}
