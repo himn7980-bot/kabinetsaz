@@ -491,40 +491,70 @@ function toPDF(sheets,S,D,C){const{jsPDF}=window.jspdf,doc=new jsPDF({orientatio
  return doc.output('blob');}
 
 
-function to3D(S,D,name){const V=[],O=[],mats={};let vi=1;const t=S.t||16,G=D.G;
- const mat=(n,h)=>{mats[n]=h;return n;};
- const hx=h=>{if(h.length===4)h='#'+h[1]+h[1]+h[2]+h[2]+h[3]+h[3];return[1,3,5].map(k=>(parseInt(h.substr(k,2),16)/255).toFixed(3)).join(' ');};
- const box=(nm,m,c8)=>{const b=vi;for(const p of c8)V.push(`v ${p[0].toFixed(1)} ${p[1].toFixed(1)} ${p[2].toFixed(1)}`);vi+=8;
-  const f=[[0,3,2,1],[4,5,6,7],[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7]];O.push(`o ${nm}\ng ${nm}\nusemtl ${m}\n`+f.map(q=>'f '+q.map(k=>b+k).join(' ')).join('\n'));};
- const W=(i,s0,s1,n0,n1,z0,z1,nm,m)=>{if(s1-s0<0.5||n1-n0<0.5||z1-z0<0.5)return;const q=quad(S,i,s0,s1,n0,n1),c=[];for(const z of[z0,z1])for(const p of q)c.push([p[0],z,-p[1]]);box(nm.replace(/\s/g,'_'),m,c);};
+function to3D(S,D,name){const V=[],O=[],mats={};let vi=1;const t=S.t||16,G=D.G,H=S.H,T=S.wallT;
+ const mat=(n,h)=>{mats[n]=h;return n;},hx=h=>{if(h.length===4)h='#'+h[1]+h[1]+h[2]+h[2]+h[3]+h[3];return[1,3,5].map(k=>(parseInt(h.substr(k,2),16)/255).toFixed(3)).join(' ');};
+ const obj=nm=>{nm=nm.replace(/\s/g,'_');O.push(`o ${nm}\ng ${nm}`);};
+ const mesh=(pts,faces,m)=>{const b=vi,C=[0,0,0];for(const p of pts){V.push(`v ${p[0].toFixed(1)} ${p[1].toFixed(1)} ${p[2].toFixed(1)}`);for(let k=0;k<3;k++)C[k]+=p[k]/pts.length;}vi+=pts.length;
+  const out=[`usemtl ${m}`];for(let f of faces){const a=pts[f[0]],c=pts[f[1]],d=pts[f[2]],u=[c[0]-a[0],c[1]-a[1],c[2]-a[2]],v=[d[0]-a[0],d[1]-a[1],d[2]-a[2]],n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
+   const fc=[0,0,0];for(const k of f)for(let j=0;j<3;j++)fc[j]+=pts[k][j]/f.length;if(n[0]*(fc[0]-C[0])+n[1]*(fc[1]-C[1])+n[2]*(fc[2]-C[2])<0)f=f.slice().reverse();out.push('f '+f.map(k=>b+k).join(' '));}O.push(out.join('\n'));};
+ const Lc=(i,s,n,z)=>{const p=P(S,i,s,n);return[p[0],z,-p[1]];};
+ const BF=[[0,3,2,1],[4,5,6,7],[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7]];
+ const W=(i,s0,s1,n0,n1,z0,z1,m)=>{if(s1-s0<0.5||n1-n0<0.5||z1-z0<0.5)return;const c=[];for(const z of[z0,z1])for(const[s,n]of[[s0,n0],[s1,n0],[s1,n1],[s0,n1]])c.push(Lc(i,s,n,z));mesh(c,BF,m);};
+ const prism=(i,ax,s,n,z,r,a0,a1,m,k)=>{k=k||10;const p=[],f=[];for(const a of[a0,a1])for(let j=0;j<k;j++){const th=2*Math.PI*j/k,c=r*Math.cos(th),d=r*Math.sin(th);p.push(ax==='z'?Lc(i,s+c,n+d,a):Lc(i,s+c,a,z+d));}
+  for(let j=0;j<k;j++)f.push([j,(j+1)%k,k+(j+1)%k,k+j]);f.push([...Array(k).keys()]);f.push([...Array(k).keys()].map(j=>k+j));mesh(p,f,m);};
  const fc=(u,pos)=>{const k=(u&&u.col)||(pos==='w'?S.colW:S.colB)||'white';return mat('Front_'+k,cOf(k)[2]);};
- const CAR=mat('Carcass','#eeeae2'),TOP=mat('Worktop',(TOPS.find(x=>x[0]===S.top)||TOPS[0])[2]),APP=mat('Appliance','#9ea3a7'),HDL=mat('Handle',(HFIN.find(h=>h[0]===S.hfin)||HFIN[0])[2]),WAL=mat('Wall','#f2f0ec'),GLS=mat('Glass','#bcd6de'),FLR=mat('Floor','#d9d4ca'),BLK=mat('Black','#222222');
- // walls
- const n=S.poly.length,T=S.wallT,H=S.H;
+ const CAR=mat('Carcass','#eeeae2'),TOP=mat('Worktop',(TOPS.find(x=>x[0]===S.top)||TOPS[0])[2]),APP=mat('Steel','#9ea3a7'),HDL=mat('Handle',(HFIN.find(h=>h[0]===S.hfin)||HFIN[0])[2]),WAL=mat('Wall','#f2f0ec'),GLS=mat('Glass','#bcd6de'),FLR=mat('Floor','#d9d4ca'),BLK=mat('Black','#222222'),CANE=mat('Cane','#d9c08f'),ALU=mat('Aluminium','#55585c');
+ const n=S.poly.length;
  for(let i=0;i<n;i++){const E=S.edges[i];if(!E.w)continue;const len=eg(S,i).len,op=E.door.map(d=>({x0:d.x,x1:d.x+d.w,lo:0,hi:d.h})).concat(E.win.map(w=>({x0:w.x,x1:w.x+w.w,lo:w.sill,hi:w.sill+w.h}))).sort((a,b)=>a.x0-b.x0);
-  let c=0,k=0;for(const o of op){W(i,c,o.x0,-T,0,0,H,`WALL_${LET(i)}_${++k}`,WAL);if(o.lo>0)W(i,o.x0,o.x1,-T,0,0,o.lo,`WALL_${LET(i)}_${++k}`,WAL);W(i,o.x0,o.x1,-T,0,o.hi,H,`WALL_${LET(i)}_${++k}`,WAL);if(o.lo>0)W(i,o.x0,o.x1,-T*0.6,-T*0.4,o.lo,o.hi,`GLASS_${LET(i)}_${k}`,GLS);c=o.x1;}
-  W(i,c,len,-T,0,0,H,`WALL_${LET(i)}_${++k}`,WAL);}
- {const p=S.poly,b=vi;for(const q of p)V.push(`v ${q[0].toFixed(1)} 0.0 ${(-q[1]).toFixed(1)}`);vi+=p.length;O.push(`o FLOOR\ng FLOOR\nusemtl ${FLR}\nf `+p.map((_,k)=>b+k).reverse().join(' '));}
+  obj('WALL_'+LET(i));let c=0;for(const o of op){W(i,c,o.x0,-T,0,0,H,WAL);if(o.lo>0)W(i,o.x0,o.x1,-T,0,0,o.lo,WAL);W(i,o.x0,o.x1,-T,0,o.hi,H,WAL);c=o.x1;}W(i,c,len,-T,0,0,H,WAL);
+  op.filter(o=>o.lo>0).forEach((o,k)=>{obj(`WINDOW_${LET(i)}_${k+1}`);W(i,o.x0,o.x1,-T*0.55,-T*0.45,o.lo,o.hi,GLS);for(const[a,b]of[[o.x0,o.x0+50],[o.x1-50,o.x1]])W(i,a,b,-T*0.7,-T*0.3,o.lo,o.hi,ALU);W(i,o.x0,o.x1,-T*0.7,-T*0.3,o.lo,o.lo+50,ALU);W(i,o.x0,o.x1,-T*0.7,-T*0.3,o.hi-50,o.hi,ALU);});}
+ obj('FLOOR');mesh(S.poly.map(q=>[q[0],0,-q[1]]).concat(S.poly.map(q=>[q[0],-20,-q[1]])),[[...S.poly.keys()],[...S.poly.keys()].map(k=>k+n)].concat(S.poly.map((_,k)=>[k,(k+1)%n,n+(k+1)%n,n+k])),FLR);
+ // door builder
+ const FW={slim:22,shaker:65,bead:65,arch:65,glass:60,alu:20,mullion:60,louvre:55,cane:60,raised:55};
+ const door=(w,f,u,pos,dd)=>{const ds=u.type==='glass'?'glass':(u.ds||S.door||'flat'),M=fc(u,pos),x0=f.x,x1=f.x+f.w,z0=f.z,z1=f.z+f.h,a=dd-t,F=FW[ds],mn=Math.min(f.w,f.h),gl=['glass','alu','mullion'].includes(ds);
+  if(F&&mn>2*F+40&&!(gl&&f.k==='drw')){const FM=ds==='alu'?ALU:M;W(w,x0,x0+F,a,dd,z0,z1,FM);W(w,x1-F,x1,a,dd,z0,z1,FM);W(w,x0+F,x1-F,a,dd,z0,z0+F,FM);W(w,x0+F,x1-F,a,dd,z1-F,z1,FM);const X0=x0+F,X1=x1-F,Z0=z0+F,Z1=z1-F;
+   if(ds==='louvre'){W(w,X0,X1,a,a+3,Z0,Z1,M);for(let z=Z0+5;z+28<=Z1;z+=38)W(w,X0,X1,a+3,dd-3,z,z+28,M);}
+   else{W(w,X0,X1,a+3,dd-8,Z0,Z1,gl?GLS:ds==='cane'?CANE:M);
+    if(ds==='raised'&&X1-X0>110&&Z1-Z0>110)W(w,X0+45,X1-45,dd-8,dd-2,Z0+45,Z1-45,M);
+    if(ds==='bead'){W(w,X0,X0+9,dd-8,dd-3,Z0,Z1,M);W(w,X1-9,X1,dd-8,dd-3,Z0,Z1,M);W(w,X0+9,X1-9,dd-8,dd-3,Z0,Z0+9,M);W(w,X0+9,X1-9,dd-8,dd-3,Z1-9,Z1,M);}
+    if(ds==='arch'&&f.k==='door'&&f.h>400){const r=(X1-X0)/2;for(let j=0;j<6;j++){const th0=Math.PI/2*j/6,th1=Math.PI/2*(j+1)/6,zz=Z1-r+r*Math.sin(th0),ze=Z1-r+r*Math.sin(th1),dx=r-r*Math.cos(th1);W(w,X0,X0+dx,dd-8,dd,zz,ze,M);W(w,X1-dx,X1,dd-8,dd,zz,ze,M);}}
+    if(ds==='mullion'){W(w,(X0+X1)/2-10,(X0+X1)/2+10,dd-8,dd-2,Z0,Z1,M);const k=Math.max(1,Math.round((Z1-Z0)/Math.max(220,(X1-X0)/2*1.3)));for(let j=1;j<k;j++){const z=Z0+(Z1-Z0)*j/k;W(w,X0,X1,dd-8,dd-2,z-10,z+10,M);}}}
+   return;}
+  if(ds==='vgroove'||ds==='fluted'){const p=ds==='fluted'?28:100,g=ds==='fluted'?10:6,k=Math.max(1,Math.round(f.w/p)),pw=f.w/k;W(w,x0,x1,a,dd-4,z0,z1,M);for(let j=0;j<k;j++)W(w,x0+j*pw+g/2,x0+(j+1)*pw-g/2,dd-4,dd,z0,z1,M);return;}
+  if(ds==='hgroove'){const k=Math.max(1,Math.round(f.h/130)),ph=f.h/k;W(w,x0,x1,a,dd-4,z0,z1,M);for(let j=0;j<k;j++)W(w,x0,x1,dd-4,dd,z0+j*ph+3,z0+(j+1)*ph-3,M);return;}
+  W(w,x0,x1,a,dd,z0,z1,M);
+  if(ds==='pilaster'&&mn>=200){const s=Math.min(70,f.w/5);for(const xx of[x0+8,x1-8-s])for(let j=0;j<4;j++)W(w,xx+s*j/4+2,xx+s*(j+1)/4-2,dd,dd+8,z0+8,z1-8,M);if(f.w-2*s-70>60&&f.h>170)W(w,x0+s+35,x1-s-35,dd,dd+5,z0+50,z1-50,M);}};
+ const handle=(w,f,u,pos,dd)=>{const hd=u.hd||S.handle||'bar',low=pos==='w'||f.k==='flap',side=f.hg==='L'?1:f.hg==='R'?-1:0,cx=f.x+f.w/2;if(hd==='push'||hd==='gola')return false;
+  if(hd==='edge'){const l=Math.min(f.k==='door'?220:320,f.w-80),x=f.k==='door'&&side?(side>0?f.x+f.w-40-l:f.x+40):cx-l/2,z=low?f.z:f.z+f.h-16;W(w,x,x+l,dd,dd+20,z,z+16,HDL);return true;}
+  const vert=f.k==='door'&&side,m=Math.min(110,f.h/4),x=vert?(side>0?f.x+f.w-45:f.x+45):cx,z=vert?(pos==='w'?f.z+m:pos==='t'&&f.z>=900?f.z+m:f.z+f.h-m):(f.k==='flap'?f.z+45:f.h<220?f.z+f.h/2:f.z+f.h-70);
+  if(hd==='knob'){prism(w,'n',x,0,z,6,dd,dd+18,HDL,8);prism(w,'n',x,0,z,15,dd+18,dd+30,HDL,10);return true;}
+  const L=Math.min(160,vert?f.h-80:f.w-60);if(vert){for(const zz of[z-L/2+12,z+L/2-22])W(w,x-5,x+5,dd,dd+24,zz,zz+10,HDL);W(w,x-6,x+6,dd+24,dd+36,z-L/2,z+L/2,HDL);}else{for(const xx of[x-L/2+12,x+L/2-22])W(w,xx,xx+10,dd,dd+24,z-5,z+5,HDL);W(w,x-L/2,x+L/2,dd+24,dd+36,z-6,z+6,HDL);}return true;};
  const runs=D.runs.concat(D.isl?[D.isl]:[]);
- for(const R of runs){const w=R.wall,bd=R.isl?S.baseD:S.baseD;
-  for(const[s0,s1]of counterSegs(R,1))W(w,s0,s1,0,R.isl?S.isl.D:S.baseD+20,S.counterH-S.topT,S.counterH,`WORKTOP_${LET(w)}_${s0}`,TOP);
-  for(const[s0,s1]of counterSegs(R,0)){const sg=R.base.filter(u=>u.x0>=s0-1&&u.x1<=s1+1&&u.type!=='endp');if(sg.length)W(w,sg[0].x0,sg[sg.length-1].x1,0,bd-60,0,S.plinth,`PLINTH_${LET(w)}_${s0}`,fc(null,'b'));}
-  for(const u of R.base.concat(R.wu)){if(u.type==='void')continue;const pos=u.L,dd=pos==='w'?S.wallD:u.type==='endp'?S.isl.D:bd,cd=dd-t-2,C=u.code;
-   if(!['filler','endp','dw','fridge'].includes(u.type))W(w,u.x0,u.x1,0,cd,u.z,u.z+u.h,`${C}_carcass`,CAR);
+ for(const R of runs){const w=R.wall,bd=S.baseD,ct=R.isl?S.isl.D:bd+20,zt0=S.counterH-S.topT,zt1=S.counterH;
+  const sinks=R.base.filter(u=>u.type==='sink').map(u=>{const c=(u.x0+u.x1)/2,bw=Math.min(460,u.w-140);return[c-bw/2,c+bw/2];});
+  counterSegs(R,1).forEach(([s0,s1],k)=>{obj(`WORKTOP_${LET(w)}_${k+1}`);let c=s0;for(const[a,b]of sinks.filter(h=>h[0]>s0&&h[1]<s1)){W(w,c,a,0,ct,zt0,zt1,TOP);W(w,a,b,0,110,zt0,zt1,TOP);W(w,a,b,500,ct,zt0,zt1,TOP);c=b;}W(w,c,s1,0,ct,zt0,zt1,TOP);});
+  counterSegs(R,0).forEach(([s0,s1],k)=>{const sg=R.base.filter(u=>u.x0>=s0-1&&u.x1<=s1+1&&u.type!=='endp');if(sg.length){obj(`PLINTH_${LET(w)}_${k+1}`);W(w,sg[0].x0,sg[sg.length-1].x1,bd-70,bd-54,0,S.plinth,fc(null,'b'));}});
+  for(const u of R.base.concat(R.wu)){if(u.type==='void')continue;const pos=u.L,dd=pos==='w'?S.wallD:u.type==='endp'?S.isl.D:bd,cd=dd-t-2,C=u.code,ds=u.type==='glass'?'glass':(u.ds||S.door),see=u.type==='open'||u.cfg==='open'||['glass','alu','mullion'].includes(ds);
+   if(!['filler','endp','dw','fridge'].includes(u.type)){obj(C+'_carcass');
+    if(see){W(w,u.x0,u.x0+t,0,cd,u.z,u.z+u.h,CAR);W(w,u.x1-t,u.x1,0,cd,u.z,u.z+u.h,CAR);W(w,u.x0+t,u.x1-t,0,cd,u.z,u.z+t,CAR);W(w,u.x0+t,u.x1-t,0,cd,u.z+u.h-t,u.z+u.h,CAR);W(w,u.x0+t,u.x1-t,0,3,u.z+t,u.z+u.h-t,CAR);const k=u.h>700?3:2;for(let j=1;j<k;j++){const z=u.z+u.h*j/k;W(w,u.x0+t,u.x1-t,3,cd-20,z-t/2,z+t/2,CAR);}}
+    else W(w,u.x0,u.x1,0,cd,u.z,u.z+u.h,CAR);}
    let k=0;for(const f of u.fr){k++;const nm=`${C}_${f.k}_${k}`;
-    if(f.k==='fill'){if(u.type==='fridge'||u.type==='endp')W(w,f.x,f.x+f.w,0,dd,f.z,f.z+f.h,nm,fc(u,pos));else W(w,f.x,f.x+f.w,dd-t,dd,f.z,f.z+f.h,nm,fc(u,pos));continue;}
     if(f.k==='open')continue;
-    if(f.k==='app'&&!f.panel){if(f.lab==='REF')W(w,f.x,f.x+f.w,30,dd-10,f.z,f.z+f.h,nm,APP);else W(w,f.x,f.x+f.w,dd-t,dd,f.z,f.z+f.h,nm,f.lab==='HOOD'?APP:BLK);continue;}
-    W(w,f.x,f.x+f.w,dd-t,dd,f.z,f.z+f.h,nm,(u.type==='glass'||['glass','alu','mullion'].includes(u.ds||S.door))&&f.k==='door'?GLS:fc(u,pos));
-    const hd=u.hd||S.handle;if((hd==='bar'||hd==='knob'||hd==='edge')&&['door','drw','flap'].includes(f.k)||f.panel){const L=hd==='knob'?30:160;
-     if(f.k==='door'&&f.hg!=='T'){const x=f.hg==='L'?f.x+f.w-45:f.x+45,zc=pos==='w'?f.z+110:f.z+f.h-110;W(w,x-6,x+6,dd,dd+25,zc-L/2,zc+L/2,`${nm}_handle`,HDL);}
-     else{const zc=f.k==='flap'?f.z+45:f.z+f.h-70;W(w,f.x+f.w/2-L/2,f.x+f.w/2+L/2,dd,dd+25,zc-6,zc+6,`${nm}_handle`,HDL);}}}
-   if(u.type==='sink'){const c=(u.x0+u.x1)/2,bw=Math.min(460,u.w-140);W(w,c-bw/2,c+bw/2,110,500,S.counterH-2,S.counterH+1,`${C}_sink_bowl`,APP);}
-   if(u.type==='hob'){const c=(u.x0+u.x1)/2,hw=Math.min(S.hobW,u.w)-60;W(w,c-hw/2,c+hw/2,40,560,S.counterH,S.counterH+6,`${C}_hob`,BLK);}}
-  if(G.cor){for(const u of R.wu.concat(R.base.filter(u=>u.L==='t'))){if(u.type==='void')continue;W(w,u.x0,u.x1,0,S.wallD+20,G.wt,G.wt+G.cor,`CORNICE_${u.code}`,fc(null,'w'));}}}
- const mtl=Object.entries(mats).map(([k,h])=>`newmtl ${k}\nKd ${hx(h)}\nKa 0 0 0\nKs ${k==='Glass'||k.endsWith('gloss')?'0.6 0.6 0.6':'0.05 0.05 0.05'}\nd ${k==='Glass'?'0.4':'1'}\nillum 2`).join('\n\n');
- const obj=`# Kabinetsaz (ArchTverse) - units: millimetres, Y up\nmtllib ${name}.mtl\n`+V.join('\n')+'\n'+O.join('\n')+'\n';
- return{obj,mtl};}
+    if(f.k==='fill'||f.k==='blind'){obj(nm);if(u.type==='fridge'||u.type==='endp')W(w,f.x,f.x+f.w,0,dd,f.z,f.z+f.h,fc(u,pos));else W(w,f.x,f.x+f.w,dd-t,dd,f.z,f.z+f.h,fc(u,pos));continue;}
+    if(f.k==='app'&&!f.panel){obj(`${C}_${f.lab}`);const x0=f.x,x1=f.x+f.w,z0=f.z,z1=f.z+f.h;
+     if(f.lab==='REF'){const sp=z0+f.h*0.38;W(w,x0,x1,30,dd-40,z0+20,z1,APP);W(w,x0,x1,dd-40,dd,z0+20,sp-3,APP);W(w,x0,x1,dd-40,dd,sp+3,z1,APP);for(const[a,b]of[[sp-420,sp-60],[sp+60,sp+520]])W(w,x0+40,x0+56,dd,dd+40,a,b,HDL);}
+     else if(f.lab==='HOOD'){W(w,x0,x1,0,dd+140,z0,z0+40,APP);W(w,x0+30,x1-30,20,dd+110,z0-4,z0,BLK);W(w,x0,x1,0,dd,z0+40,z1,APP);}
+     else if(f.lab==='OVEN'){W(w,x0,x1,dd-t,dd,z0,z1,BLK);W(w,x0+50,x1-50,dd,dd+3,z0+60,z1-150,GLS);W(w,x0+60,x0+72,dd,dd+35,z1-95,z1-83,APP);W(w,x1-72,x1-60,dd,dd+35,z1-95,z1-83,APP);W(w,x0+50,x1-50,dd+35,dd+50,z1-97,z1-81,APP);for(let j=0;j<3;j++)prism(w,'n',x0+f.w*(0.3+0.2*j),0,z1-40,14,dd,dd+16,APP,8);}
+     else W(w,x0,x1,dd-t,dd,z0,z1,APP);continue;}
+    const g=(u.hd||S.handle)==='gola'&&['door','drw','flap'].includes(f.k),lw=pos==='w'||f.k==='flap',ff=g?Object.assign({},f,{h:f.h-26,z:lw?f.z+26:f.z}):f;
+    obj(nm);door(w,ff,u,pos,dd);if(g)W(w,f.x,f.x+f.w,dd-t-22,dd-t+2,lw?f.z:f.z+f.h-26,lw?f.z+26:f.z+f.h,BLK);
+    if(['door','drw','flap'].includes(f.k)||f.panel){const mk=O.length;obj(nm+'_handle');if(!handle(w,f,u,pos,dd))O.length=mk;}}
+   if(u.type==='sink'){const c=(u.x0+u.x1)/2,bw=Math.min(460,u.w-140),a=c-bw/2,b=c+bw/2,zb=zt1-190;obj(C+'_sink_bowl');W(w,a,b,110,500,zb,zb+3,APP);W(w,a,a+3,110,500,zb,zt1+2,APP);W(w,b-3,b,110,500,zb,zt1+2,APP);W(w,a,b,110,113,zb,zt1+2,APP);W(w,a,b,497,500,zb,zt1+2,APP);prism(w,'z',c,305,0,22,zb+3,zb+6,BLK,10);
+    obj(C+'_tap');prism(w,'z',c,60,0,24,zt1,zt1+12,APP,10);prism(w,'z',c,60,0,13,zt1+12,zt1+300,APP,10);W(w,c-10,c+10,60,240,zt1+280,zt1+300,APP);prism(w,'z',c,232,0,10,zt1+255,zt1+280,APP,8);W(w,c+24,c+70,54,66,zt1+40,zt1+50,APP);}
+   if(u.type==='hob'){const c=(u.x0+u.x1)/2,hw=Math.min(S.hobW,u.w)-60;obj(C+'_hob');W(w,c-hw/2,c+hw/2,40,560,zt1,zt1+8,BLK);for(const[ds,dn,r]of[[-hw/4,190,45],[hw/4,190,60],[-hw/4,420,60],[hw/4,420,45]]){prism(w,'z',c+ds,dn,0,r,zt1+8,zt1+22,APP,12);prism(w,'z',c+ds,dn,0,r*0.5,zt1+22,zt1+30,BLK,10);}for(let j=0;j<4;j++)prism(w,'z',c-60+40*j,75,0,13,zt1+8,zt1+28,APP,8);}}
+  if(G.cor){let k=0;for(const u of R.wu.concat(R.base.filter(u=>u.L==='t'))){if(u.type==='void')continue;const d=u.L==='t'?bd:S.wallD;obj(`CORNICE_${LET(w)}_${++k}`);W(w,u.x0,u.x1,0,d+15,G.wt,G.wt+G.cor*0.4,fc(null,'w'));W(w,u.x0,u.x1,0,d+35,G.wt+G.cor*0.4,G.wt+G.cor*0.75,fc(null,'w'));W(w,u.x0,u.x1,0,d+55,G.wt+G.cor*0.75,G.wt+G.cor,fc(null,'w'));}}}
+ const mtl=Object.entries(mats).map(([k,h])=>`newmtl ${k}\nKd ${hx(h)}\nKa 0 0 0\nKs ${['Glass','Steel','Handle','Aluminium'].includes(k)?'0.6 0.6 0.6':'0.05 0.05 0.05'}\nd ${k==='Glass'?'0.4':'1'}\nillum 2`).join('\n\n');
+ return{obj:`# Kabinetsaz (ArchTverse) - units: millimetres, Y up\nmtllib ${name}.mtl\n`+V.join('\n')+'\n'+O.join('\n')+'\n',mtl};}
 
 
 const HWFA={'Hinge':'لولا','Leg':'پایه کابینت','Shelf pin':'پین طبقه','Wall hanger (pair)':'آویز کابینت هوایی (جفت)','Drawer runner set':'ریل کشو (دست)','Lift-up mechanism':'جک بالابر','DW panel fixing kit':'کیت پنل ظرفشویی','Bar handle 128/160':'دستگیره میله‌ای','Knob':'دستگیره دکمه‌ای','Gola profile (per front)':'پروفیل گولا (هر درب)','Edge pull profile':'دستگیره پروفیلی','Push-to-open latch':'مگنت فشاری'};
