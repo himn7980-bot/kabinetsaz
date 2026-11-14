@@ -75,7 +75,7 @@ th{background:#f7f4ef}.tw{overflow:auto;max-height:60vh}
 const DEF={proj:'KITCHEN-01',H:2800,wallT:200,style:'modern',
 poly:[[0,0],[4000,0],[4000,-3200],[0,-3200]],
 edges:[{w:1,cab:1,win:[{x:1500,w:1000,sill:1100,h:1200}],door:[]},{w:1,cab:0,win:[],door:[]},{w:1,cab:0,win:[],door:[{x:300,w:900,h:2100}]},{w:1,cab:1,win:[],door:[]}],
-preset:'L',door:'flat',handle:'gola',colB:'white',colW:'white',fin:'matte',top:'quartz',hfin:'black',title:'',sheetL:3660,sheetW:1830,waste:15,prices:{},cur:'',site:'',profit:0,man:{},sink:{e:0,x:1900},hob:{e:3,x:2000},fr:{e:3,x:375},isl:{on:0,x:1000,y:-1700,L:2000,D:1000},
+preset:'L',door:'flat',handle:'gola',colB:'white',colW:'white',fin:'matte',top:'quartz',hfin:'black',title:'',sheetL:3660,sheetW:1830,waste:15,prices:{},cur:'IQD',site:'',profit:0,man:{},sink:{e:0,x:1900},hob:{e:3,x:2000},fr:{e:3,x:375},isl:{on:0,x:1000,y:-1700,L:2000,D:1000},
 counterH:900,plinth:100,topT:40,baseD:600,wallD:350,splash:550,wallMode:'ceil',wallH:800,t:16,
 sinkW:800,dw:'R',waterH:550,drainH:450,hobW:600,hobType:'gas',gasH:550,frW:750,frH:1850,oven:0,ovenZ:850,sockH:1100,sockLowH:300};
 const TL={corner:'کنج کور',sink:'سینک',hob:'زیر گاز (کشو)',dw:'ماشین ظرفشویی',d1:'یک‌درب',d2:'دودرب',drw:'کشویی',pull:'سوپری باریک',filler:'فیلر',endp:'بغل‌بند جزیره',fridge:'محفظه یخچال',oven:'ستون فر',w1:'بالا یک‌درب',w2:'بالا دودرب',hood:'کابینت هود',open:'قفسه باز',void:'در/پنجره',glass:'دکور شیشه‌ای',drainer:'آبچکان',ovenb:'فر زیر گاز'};
@@ -586,8 +586,8 @@ function boq(S,D,C){const A=(S.sheetL||3660)*(S.sheetW||1830)/1e6*(1-(S.waste==n
  add('دستمزد','lab_top','برش و نصب صفحه',C.top,'متر','Worktop fitting');
  add('دستمزد','trans','حمل و نقل',1,'سرویس','Transport');
  return R;}
-function boqTotal(S,rows){const P=S.prices||{};let s=0;for(const r of rows)s+=(+P[r.k]||0)*r.qty;return{sub:s,tot:s*(1+(+S.profit||0)/100)};}
-function boqCSV(S,D,C){const rows=boq(S,D,C),P=S.prices||{},t=boqTotal(S,rows),L=['Group,Item,Item (EN),Qty,Unit,Unit price,Total'+(S.cur?' ('+S.cur+')':'')];
+function boqTotal(S,rows){const P=curP(S);let s=0;for(const r of rows)s+=(+P[r.k]||0)*r.qty;return{sub:s,tot:s*(1+(+S.profit||0)/100)};}
+function boqCSV(S,D,C){const rows=boq(S,D,C),P=curP(S),t=boqTotal(S,rows),L=['Group,Item,Item (EN),Qty,Unit,Unit price,Total'+' ('+CURS[S.cur||'IQD'][2]+')'];
  for(const r of rows){const p=+P[r.k]||0;L.push([r.g,'"'+r.name+'"','"'+r.en+'"',r.qty,r.unit,p||'',p?Math.round(p*r.qty):''].join(','));}
  L.push('');L.push(',,,,,Subtotal,'+Math.round(t.sub));L.push(',,,,,Overhead/profit %,'+(+S.profit||0));L.push(',,,,,TOTAL,'+Math.round(t.tot));
  L.push('');L.push(`Sheet size,${S.sheetW||1830}x${S.sheetL||3660} mm,Waste %,${S.waste==null?15:S.waste}`);return '﻿'+L.join('\r\n');}
@@ -595,6 +595,9 @@ function partsCSV(C,S){const L=['Part code,Unit,Part,Length mm,Width mm,Thicknes
  for(const r of C.rows){const ab=r.part.replace(/[^A-Za-z]/g,'').slice(0,4).toUpperCase(),k=r.code+'-'+ab;n[k]=(n[k]||0)+1;const th=r.mat==='HDF3'?3:r.mat.includes('x2')?2*(S.t||16):(S.t||16);
   L.push([k+'-'+n[k],r.code,r.part,r.L,r.W,th,r.q,r.mat,r.eb].join(','));}
  L.push('');L.push('Hardware,Qty');for(const k in C.hw)L.push(k+','+C.hw[k]);return '﻿'+L.join('\r\n');}
+
+const CURS={IQD:['عراق — دینار','دینار','IQD'],IRT:['ایران — تومان','تومان','Toman'],USD:['دلار آمریکا','$','USD']};
+function curP(S){const c=S.cur&&CURS[S.cur]?S.cur:'IQD';if(!S.prices||typeof S.prices!=='object')S.prices={};for(const k in S.prices)if(typeof S.prices[k]!=='object'){const o=S.prices;S.prices={[c]:o};break;}return S.prices[c]||(S.prices[c]={});}
 
 function svgInner(p){let s='';for(const q of p){const st=LS[q.ly]||LS.CAB,a=`stroke="${q.sc||st.c}" stroke-width="${st.w}" vector-effect="non-scaling-stroke"${st.d?' stroke-dasharray="40 30"':''} fill="${q.fc&&(q.c||q.t==='C')?q.fc:'none'}"`;
   if(q.t==='L')s+=`<line x1="${q.x1.toFixed(1)}" y1="${(-q.y1).toFixed(1)}" x2="${q.x2.toFixed(1)}" y2="${(-q.y2).toFixed(1)}" ${a}/>`;
@@ -964,15 +967,16 @@ async function exportAll(){const c=full();if(!c)return;toast('در حال ساخ
 document.addEventListener('click',ev=>{const t=ev.target.closest('[data-xa],[data-cx]');if(!t)return;const c=full();if(!c)return;
  if(t.dataset.xa)exportAll();else if(t.dataset.cx==='boq')save(S.proj+'_cost_estimate.csv',boqCSV(S,c.D,c.C),'text/csv');else if(t.dataset.cx==='parts')save(S.proj+'_parts_codes.csv',partsCSV(c.C,S),'text/csv');});
 const fmt=n=>Math.round(n).toLocaleString('en-US');
-function drawCost(){const c=full();if(!c){$('t-cost').innerHTML='<div class="warn">خطا در طراحی</div>';return;}const rows=boq(S,c.D,c.C),P=S.prices||{},t=boqTotal(S,rows),cur=S.cur||'';let g='';
- const q=r=>'https://www.google.com/search?q='+encodeURIComponent('قیمت '+r.name.replace(/\(.*?\)/g,'').trim()+(S.site?' site:'+S.site:''));
- $('t-cost').innerHTML=`<div class="card"><h3>ابعاد ورق و تنظیمات</h3><div class="f"><label>طول ورق (mm)<input type="number" data-ck="sheetL" value="${S.sheetL}"></label><label>عرض ورق (mm)<input type="number" data-ck="sheetW" value="${S.sheetW}"></label><label>پرت برش (٪)<input type="number" data-ck="waste" value="${S.waste}"></label><label>واحد پول<input data-ck="cur" value="${cur}" placeholder="مثلاً دینار / تومان / $"></label><label>سایت قیمت (اختیاری)<input data-ck="site" value="${S.site||''}" placeholder="مثلاً digikala.com" dir="ltr"></label><label>سود و بالاسری (٪)<input type="number" data-ck="profit" value="${S.profit||0}"></label></div>
- <p class="hint">تعداد ورق از روی متراژ قطعات و درصد پرت حساب می‌شود (چیدمان دقیق قطعات روی ورق نیست). قیمت‌ها را خودتان وارد کنید؛ 🔍 همان قلم را در گوگل${S.site?' داخل '+S.site:''} جست‌وجو می‌کند تا قیمت را ببینید و اینجا بنویسید.</p></div>
+function drawCost(){const c=full();if(!c){$('t-cost').innerHTML='<div class="warn">خطا در طراحی</div>';return;}if(!CURS[S.cur])S.cur='IQD';const rows=boq(S,c.D,c.C),P=curP(S),B=book()[S.cur]||{},cur=CURS[S.cur][1];let g='',fromB=0;for(const r of rows)if(!(+P[r.k])&&+B[r.k]){P[r.k]=+B[r.k];fromB++;}const t=boqTotal(S,rows);
+ const q=r=>'https://www.google.com/search?q='+encodeURIComponent((S.cur==='IRT'?'قیمت '+r.name.replace(/\(.*?\)/g,'').trim():S.cur==='IQD'?'سعر '+r.en+' العراق بالدينار':r.en+' price USD')+(S.site?' site:'+S.site:''));
+ $('t-cost').innerHTML=`<div class="card"><h3>ابعاد ورق و تنظیمات</h3><div class="f"><label>طول ورق (mm)<input type="number" data-ck="sheetL" value="${S.sheetL}"></label><label>عرض ورق (mm)<input type="number" data-ck="sheetW" value="${S.sheetW}"></label><label>پرت برش (٪)<input type="number" data-ck="waste" value="${S.waste}"></label><label>کشور / واحد پول<select data-ck="cur">${Object.entries(CURS).map(([k,v])=>`<option value="${k}"${S.cur===k?' selected':''}>${v[0]}</option>`).join('')}</select></label><label>سایت قیمت (اختیاری)<input data-ck="site" value="${S.site||''}" placeholder="مثلاً digikala.com" dir="ltr"></label><label>سود و بالاسری (٪)<input type="number" data-ck="profit" value="${S.profit||0}"></label></div>
+ <p class="hint">هر واحد پول لیست قیمت جدای خودش را دارد. قیمتی که وارد می‌کنید در «لیست قیمت شما» برای همان واحد پول می‌ماند و در پروژه‌های بعدی خودکار پر می‌شود${fromB?' ('+fromB+' ردیف الان از لیست شما پر شد)':''}. برنامه قیمت بازار را خودش نمی‌داند؛ برای قیمت روز 🔍 را بزنید.</p><p class="hint">تعداد ورق از روی متراژ قطعات و درصد پرت حساب می‌شود (چیدمان دقیق قطعات روی ورق نیست). قیمت‌ها را خودتان وارد کنید؛ 🔍 همان قلم را در گوگل${S.site?' داخل '+S.site:''} جست‌وجو می‌کند تا قیمت را ببینید و اینجا بنویسید.</p></div>
  <div class="card"><h3>ریز متره و برآورد</h3><div class="tw" style="max-height:none"><table style="direction:rtl"><tr><th style="text-align:right">قلم</th><th>مقدار</th><th>واحد</th><th>قیمت واحد</th><th>جمع</th><th></th></tr>${rows.map(r=>{const p=+P[r.k]||0,h=r.g!==g?`<tr><th colspan="6" style="text-align:right;background:#efe9df">${g=r.g}</th></tr>`:'';return h+`<tr><td style="text-align:right;white-space:normal;min-width:150px">${r.name}</td><td>${r.qty}</td><td>${r.unit}</td><td><input type="number" inputmode="decimal" data-pk="${r.k}" value="${p||''}" style="width:95px;padding:4px"></td><td><b>${p?fmt(p*r.qty):'—'}</b></td><td><a href="${q(r)}" target="_blank" rel="noopener" style="text-decoration:none">🔍</a></td></tr>`;}).join('')}</table></div>
  <div class="stats"><div>جمع اقلام<b>${fmt(t.sub)} ${cur}</b></div><div>سود و بالاسری ${+S.profit||0}٪<b>${fmt(t.tot-t.sub)} ${cur}</b></div><div style="background:#1d1d1f;color:#fff">برآورد کل<b>${fmt(t.tot)} ${cur}</b></div></div>
  ${rows.some(r=>!(+P[r.k]))?'<p class="hint">ردیف‌هایی که قیمت ندارند در جمع حساب نشده‌اند.</p>':''}
  <p class="row"><button class="btn p" data-cx="boq">دانلود برآورد (CSV)</button><button class="btn p" data-cx="parts">فایل کد قطعات (CSV)</button><button class="btn p" data-xa="1" style="background:#1d1d1f;border-color:#1d1d1f">⬇ همه خروجی‌ها یکجا (zip)</button></p></div>`;}
-$('t-cost').addEventListener('change',ev=>{const d=ev.target.dataset;if(d.pk){if(!S.prices)S.prices={};S.prices[d.pk]=+ev.target.value||0;}else if(d.ck){const k=d.ck;S[k]=typeof DEF[k]==='number'?Math.max(0,+ev.target.value||0):ev.target.value.trim();if((k==='sheetL'||k==='sheetW')&&S[k]<300)S[k]=DEF[k];if(k==='waste')S.waste=Math.min(60,S.waste);}else return;store();compute();drawCost();});
+function book(){try{return JSON.parse(localStorage.getItem('kabPrices')||'{}');}catch(e){return{};}}
+$('t-cost').addEventListener('change',ev=>{const d=ev.target.dataset;if(d.pk){const v=+ev.target.value||0;curP(S)[d.pk]=v;const bk=book();(bk[S.cur]||(bk[S.cur]={}))[d.pk]=v;try{localStorage.setItem('kabPrices',JSON.stringify(bk));}catch(e){}}else if(d.ck){const k=d.ck;S[k]=typeof DEF[k]==='number'?Math.max(0,+ev.target.value||0):ev.target.value.trim();if((k==='sheetL'||k==='sheetW')&&S[k]<300)S[k]=DEF[k];if(k==='waste')S.waste=Math.min(60,S.waste);}else return;store();compute();drawCost();});
 const THREE_URL='three.min.js';let T3=null;
 function load3(cb){if(window.THREE)return cb();const s=document.createElement('script');s.src=THREE_URL;s.onload=cb;s.onerror=()=>{$('v3msg').textContent='کتابخانه سه‌بعدی بارگذاری نشد.';};document.head.appendChild(s);}
 function draw3(){load3(()=>{const el=$('v3c'),c=full();if(!c)return;const TH=window.THREE;
