@@ -60,10 +60,11 @@ th{background:#f7f4ef}.tw{overflow:auto;max-height:60vh}
 </head>
 <body>
 <header><h1 style="display:flex;align-items:center;gap:6px">کابینت‌ساز <small>ArchTverse</small><span style="margin-inline-start:auto;display:flex;gap:4px"><button class="btn" data-ur="-1" title="Ctrl+Z">↶ برگشت</button><button class="btn" data-ur="1" title="Ctrl+Y">↷</button></span></h1>
-<nav id="nav"><button data-t="space" class="on">۱. فضا</button><button data-t="cab">۲. کابینت</button><button data-t="elv">۳. نماها</button><button data-t="dwg">۴. خروجی</button><button data-t="cost">۵. برآورد</button><button data-t="adv">جزئیات</button></nav></header>
+<nav id="nav"><button data-t="space" class="on">۱. فضا</button><button data-t="cab">۲. کابینت</button><button data-t="elv">۳. نماها</button><button data-t="v3">سه‌بعدی</button><button data-t="dwg">۴. خروجی</button><button data-t="cost">۵. برآورد</button><button data-t="adv">جزئیات</button></nav></header>
 <main>
 <div id="edwrap" class="wrap"><div id="ed"><div class="tb" id="etb"></div><button class="btn fab" id="efab" style="display:none">🗑 حذف</button><div class="zm" style="position:absolute;bottom:8px;left:8px;display:flex;gap:4px;z-index:2"><button class="btn" data-z="1">＋</button><button class="btn" data-z="-1">－</button><button class="btn" data-z="0">⤢</button></div><svg id="esvg" xmlns="http://www.w3.org/2000/svg"><g id="eg"></g></svg></div><div id="side"></div></div>
 <section class="tab" id="t-elv"><div class="chips" id="vchips" style="margin:4px 0 8px"></div><div class="wrap"><div id="ved"><div class="tb" id="vtb"></div><button class="btn fab" id="vfab" style="display:none">🗑 حذف</button><div style="position:absolute;bottom:8px;left:8px;display:flex;gap:4px;z-index:2"><button class="btn" data-vz="1">＋</button><button class="btn" data-vz="-1">－</button><button class="btn" data-vz="0">⤢</button></div><div style="background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden"><svg id="vsvg" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:58vh;touch-action:none;user-select:none"><g id="vg"></g></svg></div></div><div id="vside"></div></div></section>
+<section class="tab" id="t-v3"><div id="v3c" style="position:relative;background:#f4f2ee;border:1px solid var(--line);border-radius:12px;overflow:hidden;height:66vh;touch-action:none"></div><p class="hint" id="v3msg">با یک انگشت بچرخانید، با دو انگشت (یا چرخ ماوس) زوم کنید. دیوارهای جلوی دوربین خودکار پنهان می‌شوند.</p></section>
 <section class="tab" id="t-dwg"></section>
 <section class="tab" id="t-cost"></section>
 <section class="tab" id="t-adv"></section>
@@ -74,7 +75,7 @@ th{background:#f7f4ef}.tw{overflow:auto;max-height:60vh}
 const DEF={proj:'KITCHEN-01',H:2800,wallT:200,style:'modern',
 poly:[[0,0],[4000,0],[4000,-3200],[0,-3200]],
 edges:[{w:1,cab:1,win:[{x:1500,w:1000,sill:1100,h:1200}],door:[]},{w:1,cab:0,win:[],door:[]},{w:1,cab:0,win:[],door:[{x:300,w:900,h:2100}]},{w:1,cab:1,win:[],door:[]}],
-preset:'L',door:'flat',handle:'gola',colB:'white',colW:'white',fin:'matte',top:'quartz',hfin:'black',sheetL:3660,sheetW:1830,waste:15,prices:{},cur:'',site:'',profit:0,man:{},sink:{e:0,x:1900},hob:{e:3,x:2000},fr:{e:3,x:375},isl:{on:0,x:1000,y:-1700,L:2000,D:1000},
+preset:'L',door:'flat',handle:'gola',colB:'white',colW:'white',fin:'matte',top:'quartz',hfin:'black',title:'',sheetL:3660,sheetW:1830,waste:15,prices:{},cur:'',site:'',profit:0,man:{},sink:{e:0,x:1900},hob:{e:3,x:2000},fr:{e:3,x:375},isl:{on:0,x:1000,y:-1700,L:2000,D:1000},
 counterH:900,plinth:100,topT:40,baseD:600,wallD:350,splash:550,wallMode:'ceil',wallH:800,t:16,
 sinkW:800,dw:'R',waterH:550,drainH:450,hobW:600,hobType:'gas',gasH:550,frW:750,frH:1850,oven:0,ovenZ:850,sockH:1100,sockLowH:300};
 const TL={corner:'کنج کور',sink:'سینک',hob:'زیر گاز (کشو)',dw:'ماشین ظرفشویی',d1:'یک‌درب',d2:'دودرب',drw:'کشویی',pull:'سوپری باریک',filler:'فیلر',endp:'بغل‌بند جزیره',fridge:'محفظه یخچال',oven:'ستون فر',w1:'بالا یک‌درب',w2:'بالا دودرب',hood:'کابینت هود',open:'قفسه باز',void:'در/پنجره',glass:'دکور شیشه‌ای',drainer:'آبچکان',ovenb:'فر زیر گاز'};
@@ -491,12 +492,12 @@ function toPDF(sheets,S,D,C){const{jsPDF}=window.jspdf,doc=new jsPDF({orientatio
  return doc.output('blob');}
 
 
-function to3D(S,D,name){const V=[],O=[],mats={};let vi=1;const t=S.t||16,G=D.G,H=S.H,T=S.wallT;
+function to3D(S,D,name,cb){let curO='';const V=[],O=[],mats={};let vi=1;const t=S.t||16,G=D.G,H=S.H,T=S.wallT;
  const mat=(n,h)=>{mats[n]=h;return n;},hx=h=>{if(h.length===4)h='#'+h[1]+h[1]+h[2]+h[2]+h[3]+h[3];return[1,3,5].map(k=>(parseInt(h.substr(k,2),16)/255).toFixed(3)).join(' ');};
- const obj=nm=>{nm=nm.replace(/\s/g,'_');O.push(`o ${nm}\ng ${nm}`);};
+ const obj=nm=>{nm=nm.replace(/\s/g,'_');curO=nm;O.push(`o ${nm}\ng ${nm}`);};
  const mesh=(pts,faces,m)=>{const b=vi,C=[0,0,0];for(const p of pts){V.push(`v ${p[0].toFixed(1)} ${p[1].toFixed(1)} ${p[2].toFixed(1)}`);for(let k=0;k<3;k++)C[k]+=p[k]/pts.length;}vi+=pts.length;
   const out=[`usemtl ${m}`];for(let f of faces){const a=pts[f[0]],c=pts[f[1]],d=pts[f[2]],u=[c[0]-a[0],c[1]-a[1],c[2]-a[2]],v=[d[0]-a[0],d[1]-a[1],d[2]-a[2]],n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
-   const fc=[0,0,0];for(const k of f)for(let j=0;j<3;j++)fc[j]+=pts[k][j]/f.length;if(n[0]*(fc[0]-C[0])+n[1]*(fc[1]-C[1])+n[2]*(fc[2]-C[2])<0)f=f.slice().reverse();out.push('f '+f.map(k=>b+k).join(' '));}O.push(out.join('\n'));};
+   const fc=[0,0,0];for(const k of f)for(let j=0;j<3;j++)fc[j]+=pts[k][j]/f.length;if(n[0]*(fc[0]-C[0])+n[1]*(fc[1]-C[1])+n[2]*(fc[2]-C[2])<0)f=f.slice().reverse();out.push('f '+f.map(k=>b+k).join(' '));}O.push(out.join('\n'));if(cb)cb(pts,out.slice(1).map(l=>l.slice(2).split(' ').map(x=>x-b)),m,curO);};
  const Lc=(i,s,n,z)=>{const p=P(S,i,s,n);return[p[0],z,-p[1]];};
  const BF=[[0,3,2,1],[4,5,6,7],[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7]];
  const W=(i,s0,s1,n0,n1,z0,z1,m)=>{if(s1-s0<0.5||n1-n0<0.5||z1-z0<0.5)return;const c=[];for(const z of[z0,z1])for(const[s,n]of[[s0,n0],[s1,n0],[s1,n1],[s0,n1]])c.push(Lc(i,s,n,z));mesh(c,BF,m);};
@@ -554,7 +555,7 @@ function to3D(S,D,name){const V=[],O=[],mats={};let vi=1;const t=S.t||16,G=D.G,H
    if(u.type==='hob'){const c=(u.x0+u.x1)/2,hw=Math.min(S.hobW,u.w)-60;obj(C+'_hob');W(w,c-hw/2,c+hw/2,40,560,zt1,zt1+8,BLK);for(const[ds,dn,r]of[[-hw/4,190,45],[hw/4,190,60],[-hw/4,420,60],[hw/4,420,45]]){prism(w,'z',c+ds,dn,0,r,zt1+8,zt1+22,APP,12);prism(w,'z',c+ds,dn,0,r*0.5,zt1+22,zt1+30,BLK,10);}for(let j=0;j<4;j++)prism(w,'z',c-60+40*j,75,0,13,zt1+8,zt1+28,APP,8);}}
   if(G.cor){let k=0;for(const u of R.wu.concat(R.base.filter(u=>u.L==='t'))){if(u.type==='void')continue;const d=u.L==='t'?bd:S.wallD;obj(`CORNICE_${LET(w)}_${++k}`);W(w,u.x0,u.x1,0,d+15,G.wt,G.wt+G.cor*0.4,fc(null,'w'));W(w,u.x0,u.x1,0,d+35,G.wt+G.cor*0.4,G.wt+G.cor*0.75,fc(null,'w'));W(w,u.x0,u.x1,0,d+55,G.wt+G.cor*0.75,G.wt+G.cor,fc(null,'w'));}}}
  const mtl=Object.entries(mats).map(([k,h])=>`newmtl ${k}\nKd ${hx(h)}\nKa 0 0 0\nKs ${['Glass','Steel','Handle','Aluminium'].includes(k)?'0.6 0.6 0.6':'0.05 0.05 0.05'}\nd ${k==='Glass'?'0.4':'1'}\nillum 2`).join('\n\n');
- return{obj:`# Kabinetsaz (ArchTverse) - units: millimetres, Y up\nmtllib ${name}.mtl\n`+V.join('\n')+'\n'+O.join('\n')+'\n',mtl};}
+ return{obj:`# Kabinetsaz (ArchTverse) - units: millimetres, Y up\nmtllib ${name}.mtl\n`+V.join('\n')+'\n'+O.join('\n')+'\n',mtl,mats};}
 
 
 const HWFA={'Hinge':'لولا','Leg':'پایه کابینت','Shelf pin':'پین طبقه','Wall hanger (pair)':'آویز کابینت هوایی (جفت)','Drawer runner set':'ریل کشو (دست)','Lift-up mechanism':'جک بالابر','DW panel fixing kit':'کیت پنل ظرفشویی','Bar handle 128/160':'دستگیره میله‌ای','Knob':'دستگیره دکمه‌ای','Gola profile (per front)':'پروفیل گولا (هر درب)','Edge pull profile':'دستگیره پروفیلی','Push-to-open latch':'مگنت فشاری'};
@@ -657,6 +658,7 @@ function sideSpace(){if(DRAW){$('side').innerHTML=`<div class="card"><h3>رسم 
  <div class="row" style="margin-top:10px">${num('qW','عرض (mm)',W||4000)}${num('qD','عمق (mm)',Dd||3200)}${num('H','ارتفاع سقف',S.H)}</div>
  <p class="row" style="margin-top:8px"><button class="btn p" data-a="pre" data-k="${S.preset||'L'}">اعمال ابعاد</button><button class="btn ${SNAP?'on':''}" data-a="snap">گوشه‌ها قائم بچسبند</button></p>
  <p class="hint">گوشه‌ها را بکشید تا دیوار کج، کوتاه یا بلند شود. روی هر دیوار بزنید تا طولش را دقیق بدهید یا پنجره و در بگذارید. اعداد به میلی‌متر است.</p></div>`;
+ {const L=projList(),ks=Object.keys(L);h+=`<div class="card"><h3>پروژه‌ها</h3><div class="row"><label>نام پروژه / مشتری<input data-k="title" value="${(S.title||'').replace(/"/g,'&quot;')}" placeholder="مثلاً آشپزخانه آقای …"></label></div><p class="row" style="margin-top:8px"><button class="btn p" data-a="psave">ذخیره</button><button class="btn" data-a="pnew">پروژه جدید</button><button class="btn" data-a="pexp">خروجی فایل</button><label class="btn" style="flex:0;flex-direction:row;color:var(--ink);font-size:14px">باز کردن فایل<input type="file" id="pimp" accept=".json,application/json" hidden></label></p>${ks.length?ks.map(k=>`<div class="op row"><b style="flex:1">${k.replace(/</g,'&lt;')}</b><button class="btn" data-a="popen" data-k="${encodeURIComponent(k)}">باز کن</button><button class="btn d" data-a="pdel" data-k="${encodeURIComponent(k)}">🗑</button></div>`).join(''):'<p class="hint">هنوز پروژه‌ای ذخیره نشده است.</p>'}<p class="hint">پروژه‌ها روی همین دستگاه ذخیره می‌شوند. برای انتقال به دستگاه دیگر «خروجی فایل» بگیرید.</p></div>`;}
  if(SEL&&SEL.e!=null){const i=SEL.e,E=S.edges[i],g=eg(S,i);
   h+=`<div class="card"><h3>دیوار ${LET(i)}</h3><div class="row">${num('eLen','طول (mm)',g.len)}</div>
   <p class="row" style="margin-top:8px">${E.w?'<button class="btn d" data-a="wall">حذف دیوار (باز شود)</button>':'<button class="btn p" data-a="wall">+ دیوار بگذار</button>'}<button class="btn" data-a="split">+ افزودن گوشه/دیوار</button></p>
@@ -745,6 +747,12 @@ addEventListener('pointerup',()=>{if(EV.drag&&TAB==='cab'){dragEnd();return;}if(
 function clr(keys,f){for(const m of Object.values(S.man||{}))for(const u of m.base.concat(m.wu))if(!f||f(u))for(const k of keys)delete u[k];}
 const sideClick=ev=>{const b=ev.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,E=SEL&&SEL.e!=null?S.edges[SEL.e]:null;
  if(a==='close'){SEL=null;drawEditor();side();return;}
+ if(a==='psave'||a==='pdel'||a==='popen'||a==='pnew'||a==='pexp'){const L=projList(),k=b.dataset.k?decodeURIComponent(b.dataset.k):'';
+  if(a==='psave'){const nm=(S.title||'').trim();if(!nm)return toast('اول نام پروژه را بنویسید');L[nm]=S;try{localStorage.setItem('kabP',JSON.stringify(L));toast('ذخیره شد: '+nm);}catch(e){toast('ذخیره نشد (حافظه مرورگر در دسترس نیست)');}side();return;}
+  if(a==='pdel'){delete L[k];try{localStorage.setItem('kabP',JSON.stringify(L));}catch(e){}side();return;}
+  if(a==='popen'){loadProj(L[k]);return;}
+  if(a==='pnew'){S=clone(DEF);store();compute();setVB();drawEditor();side();toast('پروژه جدید');return;}
+  if(a==='pexp'){save((S.proj||'project')+'_project.json',JSON.stringify(S,null,1),'application/json');return;}}
  if(a==='dstyle'){const B={modern:['flat','gola'],neoclassic:['shaker','bar'],classic:['raised','knob']}[b.dataset.k];S.style=b.dataset.k;S.door=B[0];S.handle=B[1];clr(['ds','hd','cfg']);toast('همه کابینت‌ها '+b.textContent.trim()+' شد');}
  if(a==='door1'){S.door=b.dataset.k;clr(['ds']);}
  if(a==='setf'){S[b.dataset.f]=b.dataset.k;if(b.dataset.f==='colB')clr(['col'],u=>u.L!=='w');if(b.dataset.f==='colW')clr(['col'],u=>u.L==='w');}
@@ -965,9 +973,35 @@ function drawCost(){const c=full();if(!c){$('t-cost').innerHTML='<div class="war
  ${rows.some(r=>!(+P[r.k]))?'<p class="hint">ردیف‌هایی که قیمت ندارند در جمع حساب نشده‌اند.</p>':''}
  <p class="row"><button class="btn p" data-cx="boq">دانلود برآورد (CSV)</button><button class="btn p" data-cx="parts">فایل کد قطعات (CSV)</button><button class="btn p" data-xa="1" style="background:#1d1d1f;border-color:#1d1d1f">⬇ همه خروجی‌ها یکجا (zip)</button></p></div>`;}
 $('t-cost').addEventListener('change',ev=>{const d=ev.target.dataset;if(d.pk){if(!S.prices)S.prices={};S.prices[d.pk]=+ev.target.value||0;}else if(d.ck){const k=d.ck;S[k]=typeof DEF[k]==='number'?Math.max(0,+ev.target.value||0):ev.target.value.trim();if((k==='sheetL'||k==='sheetW')&&S[k]<300)S[k]=DEF[k];if(k==='waste')S.waste=Math.min(60,S.waste);}else return;store();compute();drawCost();});
+const THREE_URL='three.min.js';let T3=null;
+function load3(cb){if(window.THREE)return cb();const s=document.createElement('script');s.src=THREE_URL;s.onload=cb;s.onerror=()=>{$('v3msg').textContent='کتابخانه سه‌بعدی بارگذاری نشد.';};document.head.appendChild(s);}
+function draw3(){load3(()=>{const el=$('v3c'),c=full();if(!c)return;const TH=window.THREE;
+ if(!T3){let r;try{r=new TH.WebGLRenderer({antialias:true});}catch(e){$('v3msg').textContent='این دستگاه نمایش سه‌بعدی (WebGL) را پشتیبانی نمی‌کند.';return;}
+  r.setPixelRatio(Math.min(2,window.devicePixelRatio||1));el.appendChild(r.domElement);r.domElement.style.touchAction='none';T3={r,th:-0.7,ph:0.45,d:0,pts:new Map()};
+  const cv=r.domElement;let p0=null;
+  cv.addEventListener('pointerdown',e=>{T3.pts.set(e.pointerId,[e.clientX,e.clientY]);try{cv.setPointerCapture(e.pointerId);}catch(_){}if(T3.pts.size===2){const[a,b]=[...T3.pts.values()];p0={d:Math.hypot(a[0]-b[0],a[1]-b[1]),D:T3.d};}});
+  cv.addEventListener('pointermove',e=>{const o=T3.pts.get(e.pointerId);if(!o)return;if(T3.pts.size===1){T3.th-=(e.clientX-o[0])*0.008;T3.ph=Math.max(0.05,Math.min(1.5,T3.ph+(e.clientY-o[1])*0.006));}T3.pts.set(e.pointerId,[e.clientX,e.clientY]);
+   if(T3.pts.size===2&&p0){const[a,b]=[...T3.pts.values()];T3.d=Math.max(1,Math.min(40,p0.D*p0.d/Math.max(10,Math.hypot(a[0]-b[0],a[1]-b[1]))));}T3.draw();});
+  const up=e=>{T3.pts.delete(e.pointerId);p0=null;};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+  cv.addEventListener('wheel',e=>{e.preventDefault();T3.d=Math.max(1,Math.min(40,T3.d*(e.deltaY>0?1.12:0.89)));T3.draw();},{passive:false});
+  addEventListener('resize',()=>{if(TAB==='v3')draw3();});}
+ const r=T3.r,sc=new TH.Scene();sc.background=new TH.Color(0xf4f2ee);(T3.geos||[]).forEach(g=>g.dispose());T3.geos=[];
+ const G={},res=to3D(S,c.D,'x',(pts,faces,m,o)=>{const wl=/^(WALL|WINDOW)_([A-Z])/.exec(o),key=(wl?wl[2]:'')+'|'+m,a=G[key]||(G[key]=[]);for(const f of faces)for(let i=1;i<f.length-1;i++)for(const k of[f[0],f[i],f[i+1]])a.push(pts[k][0]/1000,pts[k][1]/1000,pts[k][2]/1000);});
+ const walls=[];for(const key in G){const[wl,m]=key.split('|'),g=new TH.BufferGeometry();g.setAttribute('position',new TH.Float32BufferAttribute(G[key],3));g.computeVertexNormals();T3.geos.push(g);
+  const me=new TH.Mesh(g,new TH.MeshLambertMaterial({color:new TH.Color(res.mats[m]||'#ccc'),transparent:m==='Glass',opacity:m==='Glass'?0.35:1,side:TH.DoubleSide}));sc.add(me);
+  if(wl){const i=wl.charCodeAt(0)-65,gg=eg(S,i),mid=P(S,i,gg.len/2,0);walls.push({me,mid:[mid[0]/1000,-mid[1]/1000],n:[gg.n[0],-gg.n[1]]});}}
+ sc.add(new TH.HemisphereLight(0xffffff,0x9a9a9a,0.8));const dl=new TH.DirectionalLight(0xffffff,0.55);sc.add(dl);
+ let a=[1e9,1e9,-1e9,-1e9];for(const p of S.poly){a[0]=Math.min(a[0],p[0]);a[1]=Math.min(a[1],p[1]);a[2]=Math.max(a[2],p[0]);a[3]=Math.max(a[3],p[1]);}
+ const tg=[(a[0]+a[2])/2000,1.1,-(a[1]+a[3])/2000],sz=Math.max(a[2]-a[0],a[3]-a[1])/1000;if(!T3.d){T3.d=sz*1.5+2;let nx=0,nz=0;for(const R of c.D.runs){const g=eg(S,R.wall);nx+=g.n[0]*g.len;nz+=-g.n[1]*g.len;}if(nx||nz)T3.th=Math.atan2(nx,nz);}
+ const w=el.clientWidth,h=el.clientHeight;r.setSize(w,h);const cam=new TH.PerspectiveCamera(45,w/h,0.05,200);
+ T3.draw=()=>{const cp=Math.cos(T3.ph),x=tg[0]+T3.d*cp*Math.sin(T3.th),y=tg[1]+T3.d*Math.sin(T3.ph),z=tg[2]+T3.d*cp*Math.cos(T3.th);cam.position.set(x,y,z);cam.lookAt(tg[0],tg[1],tg[2]);dl.position.set(x+1,y+3,z+1);
+  for(const W of walls)W.me.visible=(x-W.mid[0])*W.n[0]+(z-W.mid[1])*W.n[1]>0;r.render(sc,cam);};T3.draw();});}
+function projList(){try{return JSON.parse(localStorage.getItem('kabP')||'{}');}catch(e){return{};}}
+function loadProj(o){if(!o||!o.poly||!o.edges||o.edges.length!==o.poly.length)return toast('فایل پروژه معتبر نیست');S=Object.assign(clone(DEF),o);fixOrient(S);SEL=null;EV.sel=null;store();compute();setVB();go('space');toast('پروژه باز شد');}
+document.addEventListener('change',ev=>{if(ev.target.id!=='pimp')return;const f=ev.target.files[0];if(!f)return;const fr=new FileReader();fr.onload=()=>{try{loadProj(JSON.parse(fr.result));}catch(e){toast('فایل پروژه خوانده نشد');}};fr.readAsText(f);});
 function go(t){if(DRAW&&t!=='space'){DRAW=null;setVB();}TAB=t;SEL=null;EV.sel=null;EV.drag=null;document.querySelectorAll('#nav button').forEach(x=>x.classList.toggle('on',x.dataset.t===t));
  $('edwrap').style.display=t==='space'||t==='cab'?'':'none';$('t-dwg').classList.toggle('on',t==='dwg');$('t-adv').classList.toggle('on',t==='adv');$('t-elv').classList.toggle('on',t==='elv');
- $('t-cost').classList.toggle('on',t==='cost');
+ $('t-cost').classList.toggle('on',t==='cost');$('t-v3').classList.toggle('on',t==='v3');if(t==='v3')draw3();
  if(t==='cost')drawCost();else if(t==='elv'){EV.sel=null;EV.vb=null;drawElv();}else if(t==='dwg')drawDwg();else if(t==='adv')drawAdv();else{drawEditor();side();}scrollTo(0,0);}
 document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>go(b.dataset.t));
 setVB();compute();go('space');}
