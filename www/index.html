@@ -52,6 +52,8 @@ th{background:#f7f4ef}.tw{overflow:auto;max-height:60vh}
 .op{border-top:1px dashed var(--line);padding-top:8px;margin-top:8px}
 .stats{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
 .stats div{background:#faf8f5;border:1px solid var(--line);border-radius:10px;padding:8px 12px}.stats b{display:block;font-size:15px}
+#toast{max-width:92vw;text-align:center;line-height:1.7;}
+.fab{position:absolute;bottom:8px;right:8px;z-index:3;background:#b3261e!important;color:#fff!important;border-color:#b3261e!important;font-size:16px;padding:10px 14px!important;border-radius:24px!important;box-shadow:0 3px 10px rgba(0,0,0,.25)}
 #toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#1d1d1f;color:#fff;padding:8px 16px;border-radius:20px;opacity:0;transition:.3s;pointer-events:none;z-index:9}
 #toast.on{opacity:1}
 </style>
@@ -60,8 +62,8 @@ th{background:#f7f4ef}.tw{overflow:auto;max-height:60vh}
 <header><h1 style="display:flex;align-items:center;gap:6px">کابینت‌ساز <small>ArchTverse</small><span style="margin-inline-start:auto;display:flex;gap:4px"><button class="btn" data-ur="-1" title="Ctrl+Z">↶ برگشت</button><button class="btn" data-ur="1" title="Ctrl+Y">↷</button></span></h1>
 <nav id="nav"><button data-t="space" class="on">۱. فضا</button><button data-t="cab">۲. کابینت</button><button data-t="elv">۳. نماها</button><button data-t="dwg">۴. خروجی</button><button data-t="adv">جزئیات</button></nav></header>
 <main>
-<div id="edwrap" class="wrap"><div id="ed"><div class="tb" id="etb"></div><div class="zm" style="position:absolute;bottom:8px;left:8px;display:flex;gap:4px;z-index:2"><button class="btn" data-z="1">＋</button><button class="btn" data-z="-1">－</button><button class="btn" data-z="0">⤢</button></div><svg id="esvg" xmlns="http://www.w3.org/2000/svg"><g id="eg"></g></svg></div><div id="side"></div></div>
-<section class="tab" id="t-elv"><div class="chips" id="vchips" style="margin:4px 0 8px"></div><div class="wrap"><div id="ved"><div class="tb" id="vtb"></div><div style="position:absolute;bottom:8px;left:8px;display:flex;gap:4px;z-index:2"><button class="btn" data-vz="1">＋</button><button class="btn" data-vz="-1">－</button><button class="btn" data-vz="0">⤢</button></div><div style="background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden"><svg id="vsvg" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:58vh;touch-action:none;user-select:none"><g id="vg"></g></svg></div></div><div id="vside"></div></div></section>
+<div id="edwrap" class="wrap"><div id="ed"><div class="tb" id="etb"></div><button class="btn fab" id="efab" style="display:none">🗑 حذف</button><div class="zm" style="position:absolute;bottom:8px;left:8px;display:flex;gap:4px;z-index:2"><button class="btn" data-z="1">＋</button><button class="btn" data-z="-1">－</button><button class="btn" data-z="0">⤢</button></div><svg id="esvg" xmlns="http://www.w3.org/2000/svg"><g id="eg"></g></svg></div><div id="side"></div></div>
+<section class="tab" id="t-elv"><div class="chips" id="vchips" style="margin:4px 0 8px"></div><div class="wrap"><div id="ved"><div class="tb" id="vtb"></div><button class="btn fab" id="vfab" style="display:none">🗑 حذف</button><div style="position:absolute;bottom:8px;left:8px;display:flex;gap:4px;z-index:2"><button class="btn" data-vz="1">＋</button><button class="btn" data-vz="-1">－</button><button class="btn" data-vz="0">⤢</button></div><div style="background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden"><svg id="vsvg" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:58vh;touch-action:none;user-select:none"><g id="vg"></g></svg></div></div><div id="vside"></div></div></section>
 <section class="tab" id="t-dwg"></section>
 <section class="tab" id="t-adv"></section>
 </main>
@@ -124,7 +126,15 @@ function resolve(list,a,b,layer,warns,R){
  if(b>cur)gap(cur,b);
  out.sort((p,q)=>p.x0-q.x0);const m=[];for(const u of out){const l=m[m.length-1];if(l&&l.type==='filler'&&u.type==='filler'&&Math.abs(l.x1-u.x0)<1){l.x1=u.x1;continue;}m.push(u);}return m;}
 
-function manChk(R,warns){const nm=R.isl?'جزیره':'دیوار '+LET(R.wall);
+const STDR={counterH:[850,920,'ارتفاع صفحه'],plinth:[100,150,'قرنیز پایین'],topT:[20,40,'ضخامت صفحه'],baseD:[560,620,'عمق کابینت زمینی'],wallD:[300,370,'عمق کابینت هوایی'],splash:[450,700,'فاصله صفحه تا کابینت هوایی'],sinkW:[600,900,'عرض کابینت سینک'],frW:[700,950,'عرض جای یخچال'],waterH:[450,600,'ارتفاع شیر آب'],drainH:[350,500,'ارتفاع فاضلاب'],sockH:[1050,1200,'ارتفاع پریز روی صفحه']};
+function stdMsg(u){const w=Math.round(u.x1-u.x0),nm=TL[u.type],cm=a=>a.map(x=>x/10).join('، ');
+ if(['filler','endp','void','corner','open'].includes(u.type))return null;
+ const rule={sink:[[600,800,900],'۶۰ تا ۹۰'],hob:[[600,900],'۶۰ یا ۹۰'],ovenb:[[600],'۶۰'],oven:[[600],'۶۰'],dw:[[450,600],'۶۰ (یا ۴۵ باریک)'],hood:[[600,900],'۶۰ یا ۹۰ (هم‌عرض گاز)']}[u.type];
+ if(rule)return rule[0].includes(w)?null:`«${nm}» ${w/10} سانت شد؛ استاندارد ${rule[1]} سانت است. تغییر اعمال شد.`;
+ if(u.type==='fridge')return w>=700&&w<=950?null:`جای یخچال ${w/10} سانت شد؛ استاندارد ۷۰ تا ۹۵ سانت است. تغییر اعمال شد.`;
+ const std=u.L==='w'?[300,350,400,450,500,600,800,900]:[150,200,250,300,350,400,450,500,600,800,900];
+ return std.includes(w)?null:`«${nm}» ${w/10} سانت شد؛ عرض‌های استاندارد: ${cm(std)} سانت. تغییر اعمال شد (سفارشی‌سازی).`;}
+function manChk(R,warns){for(const u of R.base.concat(R.wu)){const m=stdMsg(u);if(m)warns.push(m.replace(' تغییر اعمال شد (سفارشی‌سازی).','').replace(' تغییر اعمال شد.',''));}const nm=R.isl?'جزیره':'دیوار '+LET(R.wall);
  for(const[lst,a,b]of[[R.base,R.u0,R.u1],[R.wu,R.w0,R.w1]]){lst.sort((p,q)=>p.x0-q.x0);let cur=a;
   for(let k=0;k<lst.length;k++){const u=lst[k];if(u.x0<cur-1&&k>0)warns.push(`${nm}: «${TL[u.type]}» با یونیت کناری روی هم افتاده است.`);
    if(u.x0>cur+1&&u.x0>a&&lst===R.base)warns.push(`${nm}: ${Math.round(u.x0-cur)} میلی‌متر فضای خالی بین کابینت‌ها (دکمه «پر کردن فاصله‌ها»).`);cur=Math.max(cur,u.x1);}
@@ -183,7 +193,8 @@ function design(S){
   runs.push(R);}
  if(!runs.length)warns.push('هیچ دیواری کابینت ندارد؛ در مرحله ۲ روی دیوارها بزنید.');
  for(const[k,nm]of[['sink','سینک'],['hob','گاز'],['fr','یخچال']])if(!runs.find(r=>r.wall===S[k].e))warns.push(`${nm} روی دیواری است که کابینت ندارد؛ آن را روی دیوار کابینت بکشید.`);
- let isl=null;const I=S.isl;
+ for(const k in STDR){const[a,b,t]=STDR[k];if(S[k]<a||S[k]>b)warns.push(`${t} ${S[k]} است؛ استاندارد ${a} تا ${b} میلی‌متر.`);}
+ let isl=null;const I=S.isl;if(I.on){if(I.L<1200)warns.push(`طول جزیره ${I.L} است؛ حداقل استاندارد ۱۲۰۰ میلی‌متر.`);if(I.D<800||I.D>1300)warns.push(`عمق جزیره ${I.D} است؛ استاندارد ۹۰۰ تا ۱۲۰۰ (با نشیمن) و حداقل ۶۰۰ بدون نشیمن.`);}
  if(I.on){isl={wall:'ISL',len:I.L,isl:1,ws:0,we:0,u0:0,u1:I.L};const r=fill(I.L-40,'b',0),b=[{x0:0,x1:20,type:'endp'}];let x=20;
   for(const w of r.u){b.push({x0:x,x1:x+w,type:w<=250?'pull':w>=800?'d2':'drw'});x+=w;}
   if(r.f){b.push({x0:x,x1:x+r.f,type:'filler'});x+=r.f;}b.push({x0:x,x1:x+20,type:'endp'});b.forEach(u=>u.L='b');isl.base=b;isl.wu=[];
@@ -533,6 +544,7 @@ function undoRedo(dir){const A=dir<0?HIST:FUT,B=dir<0?FUT:HIST;if(!A.length)retu
  SEL=null;EV.sel=null;EV.drag=null;DRAG=null;compute();if(TAB==='elv')drawElv();else if(TAB==='dwg')drawDwg();else if(TAB==='adv')drawAdv();else{drawEditor();side();}toast(dir<0?'برگشت':'جلو');}
 addEventListener('keydown',ev=>{if(!(ev.ctrlKey||ev.metaKey)||ev.target.tagName==='INPUT')return;const k=ev.key.toLowerCase();if(k==='z'&&!ev.shiftKey){ev.preventDefault();undoRedo(-1);}else if(k==='y'||(k==='z'&&ev.shiftKey)){ev.preventDefault();undoRedo(1);}});
 document.addEventListener('click',ev=>{const b=ev.target.closest('[data-ur]');if(b)undoRedo(+b.dataset.ur);const l=ev.target.closest('[data-ly]');if(l){EV.layer=l.dataset.ly;EV.sel=null;drawEditor();side();}});
+function note(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(note.t);note.t=setTimeout(()=>t.classList.remove('on'),6000);}
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2200);}
 function compute(){try{const D=design(S);CUR={D};dirty=true;}catch(e){console.error(e);CUR=null;}}
 function setVB(){let a=[1e9,1e9,-1e9,-1e9];for(const p of S.poly){a[0]=Math.min(a[0],p[0]);a[1]=Math.min(a[1],p[1]);a[2]=Math.max(a[2],p[0]);a[3]=Math.max(a[3],p[1]);}
@@ -556,7 +568,8 @@ function drawEditor(){if(DRAW)return drawDraw();if(!CUR)return;const D=CUR.D,R=V
  if(TAB==='space')S.poly.forEach((p,i)=>{s+=`<circle data-v="${i}" cx="${p[0]}" cy="${-p[1]}" r="${R*.7}" fill="${SEL&&SEL.v===i?'#e08a2b':'#1d1d1f'}" stroke="#fff" stroke-width="${R*.15}" style="cursor:grab"/>`;});
  if(TAB==='cab'){for(const[k,c,t]of[['sink','#1b6fd1','سینک'],['hob','#d1361b','گاز'],['fr','#555','یخچال']]){const m=S[k];if(m.e>=S.poly.length||(S.man&&S.man[String(m.e)]))continue;const p=P(S,m.e,m.x,S.baseD/2);
    s+=`<g data-m="${k}" style="cursor:grab"><circle cx="${p[0]}" cy="${-p[1]}" r="${R*1.15}" fill="${c}" fill-opacity=".9" stroke="#fff" stroke-width="${R*.12}"/><text x="${p[0]}" y="${-p[1]}" font-size="${R*.62}" text-anchor="middle" dominant-baseline="middle" fill="#fff" font-family="Vazirmatn,Arial" font-weight="700" pointer-events="none">${t}</text></g>`;}
-  if(S.isl.on){const I=S.isl;s+=`<rect data-i="1" x="${I.x}" y="${-I.y}" width="${I.L}" height="${I.D}" fill="#8a5a2b" fill-opacity=".08" stroke="#8a5a2b" stroke-dasharray="${R*.4}" style="cursor:move"/><text x="${I.x+I.L/2}" y="${-I.y+I.D*.8}" font-size="${R*.7}" text-anchor="middle" fill="#8a5a2b" font-family="Vazirmatn" pointer-events="none">جزیره (اینجا را بکشید)</text>`;}
+  if(S.isl.on){const I=S.isl;s+=`<rect data-i="1" x="${I.x}" y="${-I.y}" width="${I.L}" height="${I.D}" fill="#8a5a2b" fill-opacity=".08" stroke="#8a5a2b" stroke-dasharray="${R*.4}" style="cursor:move"/><text x="${I.x+I.L/2}" y="${-I.y+I.D*.8}" font-size="${R*.7}" text-anchor="middle" fill="#8a5a2b" font-family="Vazirmatn" pointer-events="none">جزیره ${I.L}×${I.D}</text>`;const pr=VB[2]/Math.max(1,$('esvg').clientWidth)*14;
+   s+=`<circle data-ih="L" cx="${I.x+I.L}" cy="${-I.y+I.D/2}" r="${pr}" fill="#8a5a2b" stroke="#fff" stroke-width="${pr*.18}" style="cursor:ew-resize"/><circle data-ih="D" cx="${I.x+I.L/2}" cy="${-I.y+I.D}" r="${pr}" fill="#8a5a2b" stroke="#fff" stroke-width="${pr*.18}" style="cursor:ns-resize"/>`;}
   const px=pxU($('esvg'),VB);
   const LY=EV.layer||'b';for(const it of elvList()){const w=it.k==='ISL'?'ISL':+it.k;(LY==='w'?it.R.wu:it.R.base).forEach((u,i)=>{if(u.type==='void')return;const dd=LY==='w'?S.wallD:u.type==='endp'?S.isl.D:S.baseD,on=EV.run===it.k&&EV.sel&&EV.sel.L===LY&&EV.sel.i===i,q=quad(S,w,u.x0,u.x1,0,dd);
    s+=`<polygon data-pu="${it.k}|${LY}|${i}" points="${q.map(v=>v[0]+','+(-v[1])).join(' ')}" fill="${on?'#e08a2b':LY==='w'?'#1b6fd1':'#000'}" fill-opacity="${on?.25:LY==='w'?.08:0}" stroke="${on?'#e08a2b':LY==='w'?'#1b6fd1':'none'}" stroke-width="${px*(on?2:1)}" style="cursor:move"/>`;
@@ -602,7 +615,7 @@ function sideCab(){const st=[['modern','مدرن'],['neoclassic','نئوکلاس
  <label>کابینت بالا<select data-k="wallMode"><option value="ceil">تا سقف</option><option value="fix"${S.wallMode==='fix'?' selected':''}>ارتفاع ثابت</option></select></label></div></div>${warnHTML()}
  ${Object.keys(S.man||{}).length?`<div class="card"><h3>دیوارهای ویرایش دستی</h3><p class="hint">این دیوارها در «نماها» دستی چیده شده‌اند و با کشیدن نماد روی همان دیوار به خودکار برمی‌گردند.</p><div class="chips">${Object.keys(S.man).map(k=>`<button class="btn" data-a="unman" data-k="${k}">بازگشت ${k==='ISL'?'جزیره':LET(+k)} به خودکار</button>`).join('')}</div></div>`:''}
  <p><button class="btn p" data-a="go">ویرایش روی نماها ←</button></p>`;}
-function etb(){const t=$('etb');if(TAB==='cab'){if(!vtb(t))t.innerHTML=`<b>انتخاب:</b><button class="btn ${(EV.layer||'b')==='b'?'on':''}" data-ly="b">کابینت زمینی</button><button class="btn ${EV.layer==='w'?'on':''}" data-ly="w">کابینت هوایی</button>`;return;}if(TAB!=='space'||DRAW||!SEL){t.innerHTML='';return;}
+function etb(){const t=$('etb');if(TAB==='cab'){if(!vtb(t))t.innerHTML=`<b>انتخاب:</b><button class="btn ${(EV.layer||'b')==='b'?'on':''}" data-ly="b">کابینت زمینی</button><button class="btn ${EV.layer==='w'?'on':''}" data-ly="w">کابینت هوایی</button>${S.isl.on?'<button class="btn d" data-a="delisl">🗑 حذف جزیره</button>':''}`;return;}$('efab').style.display='none';if(TAB!=='space'||DRAW||!SEL){t.innerHTML='';return;}
  if(SEL.v!=null){t.innerHTML=`<b>گوشه ${SEL.v+1}</b><span class="hint">گوشه را بکشید</span><button class="btn" data-a="close">✕</button>`;return;}
  const i=SEL.e,E=S.edges[i];t.innerHTML=`<b>دیوار ${LET(i)}</b><input type="number" inputmode="numeric" data-k="eLen" value="${eg(S,i).len}">
  ${E.w?'<button class="btn d" data-a="wall">🗑 حذف دیوار (باز بماند)</button>':'<button class="btn p" data-a="wall">+ دیوار بگذار</button>'}<button class="btn" data-a="split">+ گوشه</button>${E.w?'<button class="btn" data-a="win">+ پنجره</button><button class="btn" data-a="door">+ در</button>':''}<button class="btn" data-a="close">✕</button>`;}
@@ -642,6 +655,7 @@ $('esvg').addEventListener('pointerdown',ev=>{const t=ev.target,d=t.dataset||{},
  if(TAB==='space'&&d.v!=null){DRAG={v:+d.v,moved:0};SEL={v:+d.v};}
  else if(TAB==='cab'&&g)DRAG={m:g.dataset.m,moved:0};
  else if(TAB==='cab'&&(d.pu||d.ph)){const[k,L,i,sd]=(d.pu||d.ph).split('|'),it=elvList().find(x=>x.k===k),gg=eg(S,k==='ISL'?'ISL':+k),s=dot(sub(w,gg.o),gg.d);if(it)beginDrag(ev,$('esvg'),it,L,+i,s,pxU($('esvg'),VB)*28,d.ph?+sd:null);return;}
+ else if(TAB==='cab'&&d.ih){DRAG={ih:d.ih,moved:0};try{$('esvg').setPointerCapture(ev.pointerId);}catch(e){}}
  else if(TAB==='cab'&&d.i)DRAG={i:1,off:sub(w,[S.isl.x,S.isl.y]),moved:0};
  else if(d.e!=null){DRAG={e:+d.e,moved:0};}
  else{DRAG={pan:1,cx:ev.clientX,cy:ev.clientY,vb:VB.slice(),moved:0};try{$('esvg').setPointerCapture(ev.pointerId);}catch(e){}return;}
@@ -652,8 +666,9 @@ addEventListener('pointermove',ev=>{if(EV.drag&&TAB==='cab'){const it=curRun2();
   S.poly[v]=p;redraw();}
  else if(DRAG.m){let best=null;for(let i=0;i<S.poly.length;i++){const E=S.edges[i];if(!E.w||!E.cab)continue;const g=eg(S,i),s=Math.max(0,Math.min(g.len,dot(sub(w,g.o),g.d))),q=P(S,i,s,0),dd=Math.hypot(w[0]-q[0],w[1]-q[1]);if(!best||dd<best.d)best={d:dd,e:i,x:Math.round(s/10)*10};}
   if(best){if(S.man){delete S.man[String(best.e)];delete S.man[String(S[DRAG.m].e)];}const hw=DRAG.m==='fr'?S.frW/2:DRAG.m==='sink'?S.sinkW/2:(S.hobW<=600?300:450),L=eg(S,best.e).len;S[DRAG.m].e=best.e;S[DRAG.m].x=Math.max(hw,Math.min(L-hw,best.x));redraw();}}
+ else if(DRAG.ih){const r=x=>Math.round(x/50)*50;if(DRAG.ih==='L')S.isl.L=Math.max(600,Math.min(6000,r(w[0]-S.isl.x)));else S.isl.D=Math.max(400,Math.min(2400,r(S.isl.y-w[1])));redraw();}
  else if(DRAG.i){S.isl.x=Math.round((w[0]-DRAG.off[0])/10)*10;S.isl.y=Math.round((w[1]-DRAG.off[1])/10)*10;redraw();}});
-addEventListener('pointerup',()=>{if(EV.drag&&TAB==='cab'){dragEnd();return;}if(!DRAG)return;const D0=DRAG;DRAG=null;if(D0.pan){if(!D0.moved){SEL=null;EV.sel=null;side();drawEditor();}return;}
+addEventListener('pointerup',()=>{if(EV.drag&&TAB==='cab'){dragEnd();return;}if(!DRAG)return;const D0=DRAG;DRAG=null;if(D0.ih||D0.i){compute();const m=CUR&&CUR.D.warns.filter(x=>x.includes('جزیره'));if(m&&m.length)note(m.join(' — ')+' (تغییر اعمال شد)');}if(D0.pan){if(!D0.moved){SEL=null;EV.sel=null;side();drawEditor();}return;}
  if(D0.e!=null&&D0.moved<4){if(TAB==='cab'){S.edges[D0.e].cab=S.edges[D0.e].cab?0:1;if(S.edges[D0.e].cab)S.edges[D0.e].w=1;}else SEL={e:D0.e};}
  if(TAB==='space'&&D0.v!=null&&D0.moved>2)setVB();
  store();compute();drawEditor();side();});
@@ -682,6 +697,7 @@ const sideClick=ev=>{const b=ev.target.closest('[data-a]');if(!b)return;const a=
  if(a==='style')S.style=b.dataset.k;
  if(a==='go'){go('elv');return;}
  if(a==='unman'){delete S.man[b.dataset.k];}
+ if(a==='delisl'){S.isl.on=0;S.pIsl=0;if(S.man)delete S.man.ISL;}
  store();compute();drawEditor();side();};
 $('side').addEventListener('click',sideClick);$('etb').addEventListener('click',sideClick);
 const sideChange=ev=>{const k=ev.target.dataset.k;if(!k)return;const v=ev.target.value,nv=+v;
@@ -729,7 +745,7 @@ function drawAdv(){const c=full();let h=`<p class="hint">این‌ها پیش‌
  <div class="card"><h3>یراق‌آلات</h3><div class="tw"><table>${Object.entries(C.hw).map(([k,v])=>`<tr><td>${k}</td><td><b>${v}</b></td></tr>`).join('')}</table></div></div>
  <div class="card"><h3>لیست برش</h3><div class="tw"><table><tr><th>Unit</th><th>Part</th><th>L</th><th>W</th><th>Qty</th><th>Material</th><th>Edge</th></tr>${C.rows.map(r=>`<tr><td>${r.code}</td><td>${r.part}</td><td>${r.L}</td><td>${r.W}</td><td>${r.q}</td><td>${r.mat}</td><td>${r.eb}</td></tr>`).join('')}</table></div><p class="hint">Edge: 1L = یک لبه بلند، 4 = چهار لبه. جعبه کشوها طبق سیستم ریل انتخابی جدا محاسبه شود.</p></div>`;}
  $('t-adv').innerHTML=h;}
-$('t-adv').addEventListener('change',ev=>{const k=ev.target.dataset.k;if(!k)return;const v=ev.target.value;S[k]=typeof DEF[k]==='number'?(+v||0):v;store();compute();drawAdv();});
+$('t-adv').addEventListener('change',ev=>{const k=ev.target.dataset.k;if(!k)return;const v=ev.target.value;S[k]=typeof DEF[k]==='number'?(+v||0):v;store();compute();drawAdv();const r=STDR[k];if(r&&(S[k]<r[0]||S[k]>r[1]))note(`${r[2]}: استاندارد ${r[0]} تا ${r[1]} میلی‌متر است؛ مقدار ${S[k]} اعمال شد.`);});
 $('t-adv').addEventListener('click',ev=>{if(ev.target.dataset.a==='reset'){S=clone(DEF);store();compute();setVB();drawAdv();toast('پیش‌فرض‌ها برگشت');}});
 // ---- elevation editor
 const EV={run:null,sel:null,vb:null,drag:null};
@@ -741,7 +757,7 @@ function pick(u){const o={x0:u.x0,x1:u.x1,type:u.type,L:u.L};if(u.blind){o.blind
 function ensureMan(it){if(!S.man)S.man={};if(!S.man[it.k])S.man[it.k]={len:it.R.len,base:it.R.base.map(pick),wu:it.R.wu.map(pick)};return S.man[it.k];}
 function selObj(it){if(!EV.sel)return null;const m=S.man&&S.man[it.k];const src=m?(EV.sel.L==='w'?m.wu:m.base):(EV.sel.L==='w'?it.R.wu:it.R.base);return src[EV.sel.i]||null;}
 function syncMk(k){if(k==='ISL')return;const m=S.man[k];for(const[t,mk]of[['sink','sink'],['hob','hob'],['fridge','fr']]){const u=m.base.find(x=>x.type===t);if(u){S[mk].e=+k;S[mk].x=Math.round((u.x0+u.x1)/2);}}}
-function after(it,obj){const m=S.man[it.k];m.base.sort((a,b)=>a.x0-b.x0);m.wu.sort((a,b)=>a.x0-b.x0);if(obj){const l=obj.L==='w'?m.wu:m.base;EV.sel={L:obj.L==='w'?'w':'b',i:l.indexOf(obj)};}syncMk(it.k);store();compute();refresh();}
+function after(it,obj){const m=S.man[it.k];m.base.sort((a,b)=>a.x0-b.x0);m.wu.sort((a,b)=>a.x0-b.x0);if(obj){const l=obj.L==='w'?m.wu:m.base;EV.sel={L:obj.L==='w'?'w':'b',i:l.indexOf(obj)};}syncMk(it.k);store();compute();refresh();if(obj){const sm=stdMsg(obj);if(sm)note(sm);}}
 function drawElv(){if(!CUR)return;const l=elvList();
  if(!l.length){$('vchips').innerHTML='';$('vg').innerHTML='';$('vside').innerHTML='<div class="warn">هیچ دیواری کابینت ندارد. در مرحله ۲ روی دیوارها بزنید.</div>';return;}
  curRun();$('vchips').innerHTML=l.map(x=>`<button class="btn ${x.k===EV.run?'on':''}" data-r="${x.k}">${x.t}${S.man&&S.man[x.k]?' ✎':''}</button>`).join('');drawElvSVG();elvSide();}
@@ -763,7 +779,7 @@ function unitCard(it,u){const opts=u.L==='w'?WT:u.L==='t'?TT:BT,lst=opts.find(o=
   <label>دستگیره<select data-vk="hd"><option value="">طبق پیش‌فرض</option>${HANDLES.map(([v,t])=>`<option value="${v}"${u.hd===v?' selected':''}>${t}</option>`).join('')}</select></label>
   <label>رنگ درب<select data-vk="col"><option value="">طبق پیش‌فرض</option>${COLORS.map(([v,t])=>`<option value="${v}"${u.col===v?' selected':''}>${t}</option>`).join('')}</select></label></div>
   <p class="row" style="margin-top:8px"><button class="btn" data-va="all">همین مدل برای کل این دیوار</button></p></div>`;}
-function vtb(el){const it=EV.run!=null&&CUR?elvList().find(x=>x.k===EV.run):null,u=it&&selObj(it);if(!u){el.innerHTML='';return false;}const w=Math.round(u.x1-u.x0);
+function vtb(el){const it=EV.run!=null&&CUR?elvList().find(x=>x.k===EV.run):null,u=it&&selObj(it),fab=$(el.id==='etb'?'efab':'vfab');fab.style.display=u?'':'none';if(!u){el.innerHTML='';return false;}const w=Math.round(u.x1-u.x0);
  el.innerHTML=`<b>${TL[u.type]} · ${w/10} سانت</b><button class="btn" data-va="w-">−5</button><button class="btn" data-va="w+">+5</button>${(u.L==='w'?[300,400,450,500,600,800,900]:[150,300,400,450,500,600,800,900]).map(x=>`<button class="btn ${x===w?'on':''}" data-va="ws" data-k="${x}">${x/10}</button>`).join('')}<button class="btn" data-va="left">◀</button><button class="btn" data-va="right">▶</button><button class="btn d" data-va="del">🗑</button><button class="btn" data-va="close">✕</button><div style="flex-basis:100%;display:flex;gap:4px;flex-wrap:wrap;border-top:1px dashed var(--line);padding-top:4px">${(u.L==='w'?WT:BT).filter(x=>x[0]!=='filler').map(([v,t])=>`<button class="btn ${u.type===v?'on':''}" data-va="ty" data-k="${v}">${t}</button>`).join('')}</div>`;return true;}
 function setW(it,o,w){setW0(it,o,w);const m=S.man[it.k];for(const q of m.base.concat(m.wu)){const x=q.x1-q.x0;if(['d1','d2','pull'].includes(q.type))q.type=x<=250?'pull':x>=700?'d2':'d1';if(['w1','w2'].includes(q.type))q.type=x>=700?'w2':'w1';}}
 const FLEX=['d1','d2','drw','pull','filler','open','w1','w2'];
@@ -838,6 +854,9 @@ $('vsvg').addEventListener('pointerdown',ev=>{const it=curRun();if(!it)return;co
 $('vsvg').addEventListener('pointermove',ev=>{if(EV.pan){const k=EV.vb[2]/Math.max(1,$('vsvg').clientWidth),dx=ev.clientX-EV.pan.cx,dy=ev.clientY-EV.pan.cy;if(Math.abs(dx)+Math.abs(dy)>4)EV.pan.moved=1;EV.vb=[EV.pan.vb[0]-dx*k,EV.pan.vb[1]-dy*k,EV.vb[2],EV.vb[3]];$('vsvg').setAttribute('viewBox',EV.vb.join(' '));return;}if(EV.drag&&TAB==='elv')dragMove(vworld(ev)[0]);});
 $('vsvg').addEventListener('pointerup',()=>{if(EV.pan){const m=EV.pan.moved;EV.pan=null;if(!m){EV.sel=null;refresh();}return;}if(TAB==='elv')dragEnd();});
 $('vsvg').addEventListener('pointercancel',()=>{if(TAB==='elv')dragEnd();});
+function delSel(){const it=TAB==='elv'?curRun():curRun2();if(!it||!EV.sel)return;const m=ensureMan(it),o=selObj(it);if(!o)return;const l=o.L==='w'?m.wu:m.base;l.splice(l.indexOf(o),1);EV.sel=null;after(it,null);toast('حذف شد (↶ برای برگرداندن)');}
+$('efab').addEventListener('click',delSel);$('vfab').addEventListener('click',delSel);
+addEventListener('keydown',ev=>{if((ev.key==='Delete'||ev.key==='Backspace')&&!/INPUT|SELECT|TEXTAREA/.test(ev.target.tagName)&&EV.sel){ev.preventDefault();delSel();}});
 const vClick=ev=>{const bt=ev.target.closest('[data-va]');if(!bt)return;const a=bt.dataset.va;const it=TAB==='elv'?curRun():curRun2();if(!it)return;
  if(a==='close'){EV.sel=null;refresh();return;}
  if(a==='auto'){delete S.man[it.k];EV.sel=null;store();compute();TAB==='elv'?drawElv():refresh();return;}
@@ -847,7 +866,7 @@ const vClick=ev=>{const bt=ev.target.closest('[data-va]');if(!bt)return;const a=
    const blk=(L==='w'?l.concat(m.base.filter(t=>t.L==='t')):l).slice().sort((p,q)=>p.x0-q.x0);for(const u of blk){if(u.x0>cur+1&&u.x1>a0)gp(cur,Math.min(u.x0,b0));cur=Math.max(cur,u.x1);}if(b0>cur+1)gp(cur,b0);l.push(...add);if(L==='w'&&it.k==='ISL')l.length=0;}
   after(it,null);return;}
  const o=selObj(it);if(!o)return;
- if(a==='del'){const l=o.L==='w'?m.wu:m.base;l.splice(l.indexOf(o),1);EV.sel=null;after(it,null);return;}
+ if(a==='del'){delSel();return;}
  if(a==='left'||a==='right'){swapNb(it,o,a==='left'?-1:1);after(it,o);}
  if(a==='w-'||a==='w+'){setW(it,o,o.x1-o.x0+(a==='w+'?50:-50));after(it,o);}
  if(a==='ws'){setW(it,o,+bt.dataset.k);after(it,o);}
