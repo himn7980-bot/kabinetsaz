@@ -432,7 +432,7 @@ function toCSV(C){const L=['Unit,Part,Length mm,Width mm,Qty,Material,Edge band'
  L.push('');L.push('Hardware,Qty');for(const k in C.hw)L.push(k+','+C.hw[k]);return '﻿'+L.join('\r\n');}
 
 function toPDF(sheets,S,D,C){const{jsPDF}=window.jspdf,doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a3'});
- const date=new Date().toISOString().slice(0,10),N=sheets.length+1,hex=c=>[parseInt(c.substr(1,2),16),parseInt(c.substr(3,2),16),parseInt(c.substr(5,2),16)];
+ const date=new Date().toISOString().slice(0,10),N=sheets.length+1,hex=c=>{if(c.length===4)c='#'+c[1]+c[1]+c[2]+c[2]+c[3]+c[3];return[parseInt(c.substr(1,2),16),parseInt(c.substr(3,2),16),parseInt(c.substr(5,2),16)];};
  const frame=(i,title,scale)=>{doc.setLineDashPattern([],0);doc.setDrawColor(0);doc.setLineWidth(.5);doc.rect(8,8,404,281);doc.rect(8,268,404,21);
   doc.setFontSize(9);doc.setTextColor(0);doc.text('ArchTverse',14,276);doc.setFontSize(7);doc.text('Kitchen cabinet - executive drawings',14,283);
   doc.setFontSize(9);doc.text(`PROJECT: ${S.proj}`,90,276);doc.text(`SHEET: ${title}`,90,283);doc.text(`SCALE: ${scale}`,230,276);doc.text(`DATE: ${date}`,230,283);
@@ -461,6 +461,41 @@ function toPDF(sheets,S,D,C){const{jsPDF}=window.jspdf,doc=new jsPDF({orientatio
  for(const k in C.hw)row([`${k}: ${C.hw[k]}`],[0]);
  return doc.output('blob');}
 
+
+function to3D(S,D,name){const V=[],O=[],mats={};let vi=1;const t=S.t||16,G=D.G;
+ const mat=(n,h)=>{mats[n]=h;return n;};
+ const hx=h=>{if(h.length===4)h='#'+h[1]+h[1]+h[2]+h[2]+h[3]+h[3];return[1,3,5].map(k=>(parseInt(h.substr(k,2),16)/255).toFixed(3)).join(' ');};
+ const box=(nm,m,c8)=>{const b=vi;for(const p of c8)V.push(`v ${p[0].toFixed(1)} ${p[1].toFixed(1)} ${p[2].toFixed(1)}`);vi+=8;
+  const f=[[0,3,2,1],[4,5,6,7],[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7]];O.push(`o ${nm}\ng ${nm}\nusemtl ${m}\n`+f.map(q=>'f '+q.map(k=>b+k).join(' ')).join('\n'));};
+ const W=(i,s0,s1,n0,n1,z0,z1,nm,m)=>{if(s1-s0<0.5||n1-n0<0.5||z1-z0<0.5)return;const q=quad(S,i,s0,s1,n0,n1),c=[];for(const z of[z0,z1])for(const p of q)c.push([p[0],z,-p[1]]);box(nm.replace(/\s/g,'_'),m,c);};
+ const fc=(u,pos)=>{const k=(u&&u.col)||(pos==='w'?S.colW:S.colB)||'white';return mat('Front_'+k,cOf(k)[2]);};
+ const CAR=mat('Carcass','#eeeae2'),TOP=mat('Worktop',(TOPS.find(x=>x[0]===S.top)||TOPS[0])[2]),APP=mat('Appliance','#9ea3a7'),HDL=mat('Handle',(HFIN.find(h=>h[0]===S.hfin)||HFIN[0])[2]),WAL=mat('Wall','#f2f0ec'),GLS=mat('Glass','#bcd6de'),FLR=mat('Floor','#d9d4ca'),BLK=mat('Black','#222222');
+ // walls
+ const n=S.poly.length,T=S.wallT,H=S.H;
+ for(let i=0;i<n;i++){const E=S.edges[i];if(!E.w)continue;const len=eg(S,i).len,op=E.door.map(d=>({x0:d.x,x1:d.x+d.w,lo:0,hi:d.h})).concat(E.win.map(w=>({x0:w.x,x1:w.x+w.w,lo:w.sill,hi:w.sill+w.h}))).sort((a,b)=>a.x0-b.x0);
+  let c=0,k=0;for(const o of op){W(i,c,o.x0,-T,0,0,H,`WALL_${LET(i)}_${++k}`,WAL);if(o.lo>0)W(i,o.x0,o.x1,-T,0,0,o.lo,`WALL_${LET(i)}_${++k}`,WAL);W(i,o.x0,o.x1,-T,0,o.hi,H,`WALL_${LET(i)}_${++k}`,WAL);if(o.lo>0)W(i,o.x0,o.x1,-T*0.6,-T*0.4,o.lo,o.hi,`GLASS_${LET(i)}_${k}`,GLS);c=o.x1;}
+  W(i,c,len,-T,0,0,H,`WALL_${LET(i)}_${++k}`,WAL);}
+ {const p=S.poly,b=vi;for(const q of p)V.push(`v ${q[0].toFixed(1)} 0.0 ${(-q[1]).toFixed(1)}`);vi+=p.length;O.push(`o FLOOR\ng FLOOR\nusemtl ${FLR}\nf `+p.map((_,k)=>b+k).reverse().join(' '));}
+ const runs=D.runs.concat(D.isl?[D.isl]:[]);
+ for(const R of runs){const w=R.wall,bd=R.isl?S.baseD:S.baseD;
+  for(const[s0,s1]of counterSegs(R,1))W(w,s0,s1,0,R.isl?S.isl.D:S.baseD+20,S.counterH-S.topT,S.counterH,`WORKTOP_${LET(w)}_${s0}`,TOP);
+  for(const[s0,s1]of counterSegs(R,0)){const sg=R.base.filter(u=>u.x0>=s0-1&&u.x1<=s1+1&&u.type!=='endp');if(sg.length)W(w,sg[0].x0,sg[sg.length-1].x1,0,bd-60,0,S.plinth,`PLINTH_${LET(w)}_${s0}`,fc(null,'b'));}
+  for(const u of R.base.concat(R.wu)){if(u.type==='void')continue;const pos=u.L,dd=pos==='w'?S.wallD:u.type==='endp'?S.isl.D:bd,cd=dd-t-2,C=u.code;
+   if(!['filler','endp','dw','fridge'].includes(u.type))W(w,u.x0,u.x1,0,cd,u.z,u.z+u.h,`${C}_carcass`,CAR);
+   let k=0;for(const f of u.fr){k++;const nm=`${C}_${f.k}_${k}`;
+    if(f.k==='fill'){if(u.type==='fridge'||u.type==='endp')W(w,f.x,f.x+f.w,0,dd,f.z,f.z+f.h,nm,fc(u,pos));else W(w,f.x,f.x+f.w,dd-t,dd,f.z,f.z+f.h,nm,fc(u,pos));continue;}
+    if(f.k==='open')continue;
+    if(f.k==='app'&&!f.panel){if(f.lab==='REF')W(w,f.x,f.x+f.w,30,dd-10,f.z,f.z+f.h,nm,APP);else W(w,f.x,f.x+f.w,dd-t,dd,f.z,f.z+f.h,nm,f.lab==='HOOD'?APP:BLK);continue;}
+    W(w,f.x,f.x+f.w,dd-t,dd,f.z,f.z+f.h,nm,(u.type==='glass'||(u.ds||S.door)==='glass')&&f.k==='door'?GLS:fc(u,pos));
+    const hd=u.hd||S.handle;if((hd==='bar'||hd==='knob'||hd==='edge')&&['door','drw','flap'].includes(f.k)||f.panel){const L=hd==='knob'?30:160;
+     if(f.k==='door'&&f.hg!=='T'){const x=f.hg==='L'?f.x+f.w-45:f.x+45,zc=pos==='w'?f.z+110:f.z+f.h-110;W(w,x-6,x+6,dd,dd+25,zc-L/2,zc+L/2,`${nm}_handle`,HDL);}
+     else{const zc=f.k==='flap'?f.z+45:f.z+f.h-70;W(w,f.x+f.w/2-L/2,f.x+f.w/2+L/2,dd,dd+25,zc-6,zc+6,`${nm}_handle`,HDL);}}}
+   if(u.type==='sink'){const c=(u.x0+u.x1)/2,bw=Math.min(460,u.w-140);W(w,c-bw/2,c+bw/2,110,500,S.counterH-2,S.counterH+1,`${C}_sink_bowl`,APP);}
+   if(u.type==='hob'){const c=(u.x0+u.x1)/2,hw=Math.min(S.hobW,u.w)-60;W(w,c-hw/2,c+hw/2,40,560,S.counterH,S.counterH+6,`${C}_hob`,BLK);}}
+  if(G.cor){for(const u of R.wu.concat(R.base.filter(u=>u.L==='t'))){if(u.type==='void')continue;W(w,u.x0,u.x1,0,S.wallD+20,G.wt,G.wt+G.cor,`CORNICE_${u.code}`,fc(null,'w'));}}}
+ const mtl=Object.entries(mats).map(([k,h])=>`newmtl ${k}\nKd ${hx(h)}\nKa 0 0 0\nKs ${k==='Glass'||k.endsWith('gloss')?'0.6 0.6 0.6':'0.05 0.05 0.05'}\nd ${k==='Glass'?'0.4':'1'}\nillum 2`).join('\n\n');
+ const obj=`# Kabinetsaz (ArchTverse) - units: millimetres, Y up\nmtllib ${name}.mtl\n`+V.join('\n')+'\n'+O.join('\n')+'\n';
+ return{obj,mtl};}
 
 function svgInner(p){let s='';for(const q of p){const st=LS[q.ly]||LS.CAB,a=`stroke="${q.sc||st.c}" stroke-width="${st.w}" vector-effect="non-scaling-stroke"${st.d?' stroke-dasharray="40 30"':''} fill="${q.fc&&(q.c||q.t==='C')?q.fc:'none'}"`;
   if(q.t==='L')s+=`<line x1="${q.x1.toFixed(1)}" y1="${(-q.y1).toFixed(1)}" x2="${q.x2.toFixed(1)}" y2="${(-q.y2).toFixed(1)}" ${a}/>`;
@@ -651,11 +686,12 @@ async function save(name,data,mime){
 window.zm=(id,d)=>{const e=$(id);let z=Math.min(4,Math.max(1,(+e.dataset.z)+d));e.dataset.z=z;e.querySelector('svg').style.width=(z*100)+'%';};
 function full(){if(!CUR)return null;if(!CUR.sh){CUR.sh=buildSheets(S,CUR.D);CUR.C=cutList(S,CUR.D);}return CUR;}
 function drawDwg(){const c=full();if(!c){$('t-dwg').innerHTML='<div class="warn">خطا در طراحی</div>';return;}
- $('t-dwg').innerHTML=warnHTML()+`<div class="card"><h3>خروجی‌ها</h3><p class="row"><button class="btn p" data-x="dxf">DXF (اتوکد / مکس)</button><button class="btn p" data-x="pdf">PDF شیت‌های A3</button><button class="btn p" data-x="csv">لیست برش CSV</button></p><p class="hint">ارتفاع نقاط تأسیسات و ابعاد لوازم پیشنهادی‌اند و در نقشه «TO BE CONFIRMED» درج شده‌اند. اعداد ریزتر در تب «جزئیات».</p></div>`+
+ $('t-dwg').innerHTML=warnHTML()+`<div class="card"><h3>خروجی‌ها</h3><p class="row"><button class="btn p" data-x="dxf">DXF (اتوکد / مکس)</button><button class="btn p" data-x="pdf">PDF شیت‌های A3</button><button class="btn p" data-x="csv">لیست برش CSV</button><button class="btn p" data-x="obj">سه‌بعدی OBJ (قابل ویرایش)</button></p><p class="hint">ارتفاع نقاط تأسیسات و ابعاد لوازم پیشنهادی‌اند و در نقشه «TO BE CONFIRMED» درج شده‌اند. اعداد ریزتر در تب «جزئیات».</p></div>`+
  c.sh.map((sh,k)=>`<div class="sheet"><div class="bar">${sh.title}<span><button onclick="zm('sv${k}',-1)">−</button> <button onclick="zm('sv${k}',1)">+</button></span></div><div class="sv" id="sv${k}" data-z="1">${toSVG(sh)}</div></div>`).join('');}
 $('t-dwg').addEventListener('click',ev=>{const x=ev.target.dataset.x;if(!x)return;const c=full();if(!c)return;
  if(x==='dxf')save(S.proj+'_kitchen.dxf',toDXF(c.sh,S),'application/dxf');
  if(x==='csv')save(S.proj+'_cutlist.csv',toCSV(c.C),'text/csv');
+ if(x==='obj'){const nm=S.proj+'_kitchen3d',r=to3D(S,c.D,nm);save(nm+'.obj',r.obj,'text/plain').then(()=>setTimeout(()=>save(nm+'.mtl',r.mtl,'text/plain'),400));}
  if(x==='pdf'){if(!window.jspdf)return toast('کتابخانه PDF بارگذاری نشد');toast('در حال ساخت PDF…');setTimeout(()=>save(S.proj+'_kitchen.pdf',toPDF(c.sh,S,c.D,c.C),'application/pdf'),50);}});
 const ADV=[['ارتفاع‌ها و عمق‌ها',[['counterH','ارتفاع صفحه از کف'],['plinth','ارتفاع قرنیز پایین'],['topT','ضخامت صفحه'],['baseD','عمق کابینت پایین'],['wallD','عمق کابینت بالا'],['splash','فاصله صفحه تا کابینت بالا'],['wallH','ارتفاع کابینت بالا (حالت ثابت)'],['wallT','ضخامت دیوار در نقشه']]],
  ['لوازم',[['sinkW','عرض کابینت سینک'],['hobW','عرض گاز (600/750/900)'],['frW','عرض محفظه یخچال'],['frH','ارتفاع یخچال'],['ovenZ','ارتفاع زیر فر']]],
