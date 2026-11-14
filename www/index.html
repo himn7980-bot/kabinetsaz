@@ -551,8 +551,9 @@ const num=(k,l,v)=>`<label>${l}<input type="number" inputmode="numeric" data-k="
 function sideSpace(){if(DRAW){$('side').innerHTML=`<div class="card"><h3>رسم آزاد دیوارها</h3><p class="hint">روی صفحه بزنید تا گوشه‌ها یکی‌یکی ساخته شوند (طول هر دیوار زنده نمایش داده می‌شود). برای بستن، روی نقطه اول بزنید یا دکمه پایان را بزنید. بعداً طول دقیق هر دیوار را می‌توانید تایپ کنید.</p>
  <p class="row"><button class="btn p" data-a="dfin" ${DRAW.length<3?'disabled':''}>پایان و بستن (${DRAW.length} گوشه)</button><button class="btn" data-a="dundo" ${DRAW.length?'':'disabled'}>برگرد</button><button class="btn ${SNAP?'on':''}" data-a="snap">قائم بچسبد</button><button class="btn d" data-a="dcancel">لغو</button></p></div>`;return;}
  const W=S.poly.length===4?eg(S,0).len:'',Dd=S.poly.length===4?eg(S,1).len:'';
- const PR=[['L','بسته (ال)'],['I','تک‌خط'],['II','موازی'],['U','یو'],['open','اوپن'],['island','جزیره‌ای']];
+ const PR=[['I','تک‌خط'],['II','موازی'],['L','ال'],['U','یو']];
  let h=`<div class="card"><h3>نوع فضا</h3><div class="chips">${PR.map(([k,t])=>`<button class="btn ${S.preset===k?'on':''}" data-a="pre" data-k="${k}">${t}</button>`).join('')}<button class="btn" data-a="draw">✏️ رسم آزاد</button></div>
+ <div class="chips" style="margin-top:8px"><button class="btn ${S.pOpen?'on':''}" data-a="ptog" data-k="pOpen">${S.pOpen?'✓ ':''}اوپن</button><button class="btn ${S.pIsl?'on':''}" data-a="ptog" data-k="pIsl">${S.pIsl?'✓ ':''}با جزیره</button></div>
  <div class="row" style="margin-top:10px">${num('qW','عرض (mm)',W||4000)}${num('qD','عمق (mm)',Dd||3200)}${num('H','ارتفاع سقف',S.H)}</div>
  <p class="row" style="margin-top:8px"><button class="btn p" data-a="pre" data-k="${S.preset||'L'}">اعمال ابعاد</button><button class="btn ${SNAP?'on':''}" data-a="snap">گوشه‌ها قائم بچسبند</button></p>
  <p class="hint">گوشه‌ها را بکشید تا دیوار کج، کوتاه یا بلند شود. روی هر دیوار بزنید تا طولش را دقیق بدهید یا پنجره و در بگذارید. اعداد به میلی‌متر است.</p></div>`;
@@ -590,16 +591,16 @@ function etb(){const t=$('etb');if(TAB==='cab'){if(!vtb(t))t.innerHTML=`<b>ان�
  ${E.w?'<button class="btn d" data-a="wall">🗑 حذف دیوار (باز بماند)</button>':'<button class="btn p" data-a="wall">+ دیوار بگذار</button>'}<button class="btn" data-a="split">+ گوشه</button>${E.w?'<button class="btn" data-a="win">+ پنجره</button><button class="btn" data-a="door">+ در</button>':''}<button class="btn" data-a="close">✕</button>`;}
 function side(){etb();if(TAB==='space')sideSpace();else if(TAB==='cab')sideCab();}
 // ---- geometry edits
-function preset(k,W,Dd){S.preset=k;S.poly=[[0,0],[W,0],[W,-Dd],[0,-Dd]];const e=(w,cab)=>({w,cab,win:[],door:[]}),E=[e(1,0),e(1,0),e(1,0),e(1,0)];
- const win=()=>E[0].win.push({x:Math.max(0,Math.round(W/2-500)),w:Math.min(1000,W-400),sill:1100,h:1200}),door=(i,L)=>E[i].door.push({x:Math.max(0,L-1300),w:900,h:2100});
- S.isl.on=0;S.dw='R';
- if(k==='L'){E[0].cab=E[3].cab=1;win();door(2,W);S.sink={e:0,x:W/2-100};S.hob={e:3,x:Dd-1200};S.fr={e:3,x:375};}
- if(k==='I'){E[0].cab=1;win();door(2,W);S.sink={e:0,x:W*0.4};S.hob={e:0,x:W-800};S.fr={e:0,x:375};}
- if(k==='II'){E[0].cab=E[2].cab=1;win();door(3,Dd);S.sink={e:0,x:W/2};S.hob={e:2,x:W/2};S.fr={e:2,x:375};}
- if(k==='U'){E[3].cab=E[0].cab=E[1].cab=1;win();door(2,W);S.sink={e:0,x:Math.max(W/2-300,S.baseD+850)};S.hob={e:1,x:Math.min(Dd-1000,1500)};S.fr={e:3,x:Dd-1000};}
- if(k==='open'){E[0].cab=E[3].cab=1;E[1].w=0;E[2].w=0;win();S.sink={e:0,x:W/2-100};S.hob={e:3,x:Dd-1200};S.fr={e:3,x:375};}
- if(k==='island'){E[0].cab=1;E[1].w=0;E[2].w=0;win();S.sink={e:0,x:W*0.4};S.hob={e:0,x:W-800};S.fr={e:0,x:375};
-  S.isl={on:1,L:Math.max(1200,Math.min(2400,Math.round(W*0.5/50)*50)),D:1000,x:0,y:0};S.isl.x=Math.round((W-S.isl.L)/2);S.isl.y=-(S.baseD+1200);}
+function preset(k,W,Dd){if(!['I','II','L','U'].includes(k))k='L';S.preset=k;S.man={};S.poly=[[0,0],[W,0],[W,-Dd],[0,-Dd]];const e=(w,cab)=>({w,cab,win:[],door:[]}),E=[e(1,0),e(1,0),e(1,0),e(1,0)],op=S.pOpen;
+ const win=()=>E[0].win.push({x:Math.max(0,Math.round(W/2-500)),w:Math.min(1000,W-400),sill:1100,h:1200}),door=(i,L)=>{if(!op)E[i].door.push({x:Math.max(0,L-1300),w:900,h:2100});};
+ S.dw='R';win();
+ if(k==='L'){E[0].cab=E[3].cab=1;door(2,W);S.sink={e:0,x:W/2-100};S.hob={e:3,x:Dd-1200};S.fr={e:3,x:375};}
+ if(k==='I'){E[0].cab=1;door(2,W);S.sink={e:0,x:W*0.4};S.hob={e:0,x:W-800};S.fr={e:0,x:375};}
+ if(k==='II'){E[0].cab=E[2].cab=1;door(3,Dd);S.sink={e:0,x:W/2};S.hob={e:2,x:W/2};S.fr={e:2,x:375};}
+ if(k==='U'){E[3].cab=E[0].cab=E[1].cab=1;door(2,W);S.sink={e:0,x:Math.max(W/2-300,S.baseD+850)};S.hob={e:1,x:Math.min(Dd-1000,1500)};S.fr={e:3,x:Dd-1000};}
+ if(op)E.forEach((x,i)=>{if(!x.cab&&!(k==='I'&&i===3))x.w=0;});
+ S.isl.on=S.pIsl?1:0;
+ if(S.pIsl){const l=E[3].cab?S.baseD+1100:300,r=W-(E[1].cab?S.baseD+1100:300),L=Math.max(1000,Math.min(2400,Math.floor((r-l)/50)*50));S.isl={on:1,L,D:1000,x:Math.round(l+(r-l-L)/2),y:-(S.baseD+1200)};}
  S.edges=E;SEL=null;fixSel();}
 function finishDraw(){const pts=DRAW.map(p=>p.slice());DRAW=null;S.preset='free';S.poly=pts;S.edges=pts.map(()=>({w:1,cab:0,win:[],door:[]}));
  let li=0;pts.forEach((_,i)=>{if(eg(S,i).len>eg(S,li).len)li=i;});fixOrient(S);li=0;S.poly.forEach((_,i)=>{if(eg(S,i).len>eg(S,li).len)li=i;});
@@ -646,6 +647,7 @@ const sideClick=ev=>{const b=ev.target.closest('[data-a]');if(!b)return;const a=
  if(a==='door1'){S.door=b.dataset.k;clr(['ds']);}
  if(a==='setf'){S[b.dataset.f]=b.dataset.k;if(b.dataset.f==='colB')clr(['col'],u=>u.L!=='w');if(b.dataset.f==='colW')clr(['col'],u=>u.L==='w');}
  if(a==='hdl1'){S.handle=b.dataset.k;clr(['hd']);}
+ if(a==='ptog'){S[b.dataset.k]=S[b.dataset.k]?0:1;const v=k=>+document.querySelector(`[data-k="${k}"]`).value;preset(S.preset,v('qW')||4000,v('qD')||3200);setVB();}
  if(a==='pre'){const v=k=>+document.querySelector(`[data-k="${k}"]`).value;preset(b.dataset.k,v('qW')||4000,v('qD')||3200);S.H=v('H')||S.H;setVB();}
  if(a==='draw'){DRAW=[];HOV=null;SEL=null;VB=[-1000,-1000,10000,9000];$('esvg').setAttribute('viewBox',VB.join(' '));drawEditor();side();toast('روی صفحه بزنید');return;}
  if(a==='dundo'){DRAW.pop();drawEditor();side();return;}
@@ -677,21 +679,27 @@ const sideChange=ev=>{const k=ev.target.dataset.k;if(!k)return;const v=ev.target
 $('side').addEventListener('change',sideChange);$('etb').addEventListener('change',sideChange);
 // ---- drawings & advanced
 let DL=null;(async()=>{try{if(window.claude&&window.claude.use)DL=await window.claude.use('downloads');}catch(e){}})();
+function crc32(u){let c,t=crc32.t;if(!t){t=crc32.t=[];for(let n=0;n<256;n++){c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}}c=-1;for(let i=0;i<u.length;i++)c=t[(c^u[i])&255]^(c>>>8);return(c^-1)>>>0;}
+function zipStore(files){const te=new TextEncoder(),parts=[],cd=[];let off=0;const u16=v=>[v&255,v>>8&255],u32=v=>[v&255,v>>8&255,v>>16&255,v>>>24&255];
+ for(const[name,txt]of files){const n=te.encode(name),d=typeof txt==='string'?te.encode(txt):txt,crc=crc32(d),h=[0x50,0x4b,3,4,...u16(20),...u16(0x800),...u16(0),...u16(0),...u16(0x21),...u32(crc),...u32(d.length),...u32(d.length),...u16(n.length),...u16(0)];
+  parts.push(new Uint8Array(h),n,d);cd.push(new Uint8Array([0x50,0x4b,1,2,...u16(20),...u16(20),...u16(0x800),...u16(0),...u16(0),...u16(0x21),...u32(crc),...u32(d.length),...u32(d.length),...u16(n.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(off)]),n);off+=h.length+n.length+d.length;}
+ const cs=cd.reduce((a,x)=>a+x.length,0);return new Blob([...parts,...cd,new Uint8Array([0x50,0x4b,5,6,0,0,0,0,...u16(files.length),...u16(files.length),...u32(cs),...u32(off),0,0])],{type:'application/zip'});}
 async function save(name,data,mime){
  const C=window.Capacitor;if(C&&C.isNativePlatform&&C.isNativePlatform()){try{const FS=C.Plugins.Filesystem,SH=C.Plugins.Share;
   const b64=data instanceof Blob?await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(String(fr.result).split(',')[1]);fr.readAsDataURL(data);}):btoa(unescape(encodeURIComponent(data)));
-  const res=await FS.writeFile({path:name,data:b64,directory:'DOCUMENTS',recursive:true});toast('ذخیره شد در Documents');try{await SH.share({title:name,url:res.uri});}catch(_){}}catch(e){toast('ذخیره نشد: '+(e.message||e));}return;}if(DL){try{await DL.save({filename:name,data});return toast('ذخیره شد');}catch(e){if(/declin|cancel|denied|reject/i.test(String(e&&(e.code||e.message))))return toast('لغو شد');
+  const res=await FS.writeFile({path:name,data:b64,directory:'DOCUMENTS',recursive:true});toast('ذخیره شد در Documents');try{await SH.share({title:name,url:res.uri});}catch(_){}}catch(e){toast('ذخیره نشد: '+(e.message||e));}return;}if(DL&&!/\.(txt|json|md|csv|html|svg|pdf|xlsx|zip|png|jpg)$/i.test(name)){data=zipStore([[name,data]]);name=name.replace(/\.[^.]+$/,'')+'.zip';}
+ if(DL){try{await DL.save({filename:name,data});return toast('ذخیره شد');}catch(e){const cd=String(e&&(e.code||e.message));if(/declin/i.test(cd))return toast('لغو شد');if(/extension/i.test(cd))return toast('این فرمت اینجا مجاز نیست');
   if(data instanceof Blob){try{await DL.save({filename:name,data:new Uint8Array(await data.arrayBuffer())});return toast('ذخیره شد');}catch(_){}}}}
  try{const b=data instanceof Blob?data:new Blob([data],{type:mime}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();toast('دانلود شروع شد');}catch(e){toast('دانلود ممکن نشد');}}
 window.zm=(id,d)=>{const e=$(id);let z=Math.min(4,Math.max(1,(+e.dataset.z)+d));e.dataset.z=z;e.querySelector('svg').style.width=(z*100)+'%';};
 function full(){if(!CUR)return null;if(!CUR.sh){CUR.sh=buildSheets(S,CUR.D);CUR.C=cutList(S,CUR.D);}return CUR;}
 function drawDwg(){const c=full();if(!c){$('t-dwg').innerHTML='<div class="warn">خطا در طراحی</div>';return;}
- $('t-dwg').innerHTML=warnHTML()+`<div class="card"><h3>خروجی‌ها</h3><p class="row"><button class="btn p" data-x="dxf">DXF (اتوکد / مکس)</button><button class="btn p" data-x="pdf">PDF شیت‌های A3</button><button class="btn p" data-x="csv">لیست برش CSV</button><button class="btn p" data-x="obj">سه‌بعدی OBJ (قابل ویرایش)</button></p><p class="hint">ارتفاع نقاط تأسیسات و ابعاد لوازم پیشنهادی‌اند و در نقشه «TO BE CONFIRMED» درج شده‌اند. اعداد ریزتر در تب «جزئیات».</p></div>`+
+ $('t-dwg').innerHTML=warnHTML()+`<div class="card"><h3>خروجی‌ها</h3><p class="row"><button class="btn p" data-x="dxf">DXF (اتوکد / مکس)</button><button class="btn p" data-x="pdf">PDF شیت‌های A3</button><button class="btn p" data-x="csv">لیست برش CSV</button><button class="btn p" data-x="obj">سه‌بعدی OBJ برای مکس (zip)</button></p><p class="hint">ارتفاع نقاط تأسیسات و ابعاد لوازم پیشنهادی‌اند و در نقشه «TO BE CONFIRMED» درج شده‌اند. اعداد ریزتر در تب «جزئیات».</p></div>`+
  c.sh.map((sh,k)=>`<div class="sheet"><div class="bar">${sh.title}<span><button onclick="zm('sv${k}',-1)">−</button> <button onclick="zm('sv${k}',1)">+</button></span></div><div class="sv" id="sv${k}" data-z="1">${toSVG(sh)}</div></div>`).join('');}
 $('t-dwg').addEventListener('click',ev=>{const x=ev.target.dataset.x;if(!x)return;const c=full();if(!c)return;
  if(x==='dxf')save(S.proj+'_kitchen.dxf',toDXF(c.sh,S),'application/dxf');
  if(x==='csv')save(S.proj+'_cutlist.csv',toCSV(c.C),'text/csv');
- if(x==='obj'){const nm=S.proj+'_kitchen3d',r=to3D(S,c.D,nm);save(nm+'.obj',r.obj,'text/plain').then(()=>setTimeout(()=>save(nm+'.mtl',r.mtl,'text/plain'),400));}
+ if(x==='obj'){const nm=S.proj+'_kitchen3d',r=to3D(S,c.D,nm);save(nm+'.zip',zipStore([[nm+'.obj',r.obj],[nm+'.mtl',r.mtl]]),'application/zip');}
  if(x==='pdf'){if(!window.jspdf)return toast('کتابخانه PDF بارگذاری نشد');toast('در حال ساخت PDF…');setTimeout(()=>save(S.proj+'_kitchen.pdf',toPDF(c.sh,S,c.D,c.C),'application/pdf'),50);}});
 const ADV=[['ارتفاع‌ها و عمق‌ها',[['counterH','ارتفاع صفحه از کف'],['plinth','ارتفاع قرنیز پایین'],['topT','ضخامت صفحه'],['baseD','عمق کابینت پایین'],['wallD','عمق کابینت بالا'],['splash','فاصله صفحه تا کابینت بالا'],['wallH','ارتفاع کابینت بالا (حالت ثابت)'],['wallT','ضخامت دیوار در نقشه']]],
  ['لوازم',[['sinkW','عرض کابینت سینک'],['hobW','عرض گاز (600/750/900)'],['frW','عرض محفظه یخچال'],['frH','ارتفاع یخچال'],['ovenZ','ارتفاع زیر فر']]],
