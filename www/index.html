@@ -639,6 +639,9 @@ function drawEditor(){if(DRAW)return drawDraw();if(!CUR)return;const D=CUR.D,R=V
   if(on||sel)s+=`<line x1="${a[0]}" y1="${-a[1]}" x2="${b[0]}" y2="${-b[1]}" stroke="${sel?'#e08a2b':'#8a5a2b'}" stroke-width="${R*.45}" stroke-opacity=".35" stroke-linecap="round"/>`;
   s+=`<line data-e="${i}" x1="${a[0]}" y1="${-a[1]}" x2="${b[0]}" y2="${-b[1]}" stroke="transparent" stroke-width="${R*1.6}" style="cursor:pointer"/>`;
   if(TAB==='space'){const m=P(S,i,g.len/2,R*1.4);s+=`<text x="${m[0]}" y="${-m[1]}" font-size="${R*.95}" text-anchor="middle" dominant-baseline="middle" fill="#8a5a2b" font-weight="700" font-family="Vazirmatn,Arial" pointer-events="none">${g.len}</text>`;}}
+ if(TAB==='space'){const px=VB[2]/Math.max(1,$('esvg').clientWidth),T=S.wallT;S.edges.forEach((E,e)=>{if(!E.w)return;for(const[t,L]of[['win',E.win],['door',E.door]])L.forEach((o,i)=>{const on=SEL&&SEL.o&&SEL.e===e&&SEL.o.t===t&&SEL.o.i===i,q=quad(S,e,o.x,o.x+o.w,-T-px*8,px*8),col=t==='win'?'#1b6fd1':'#2e8b57';
+   s+=`<polygon data-o="${e}|${t}|${i}" points="${q.map(v=>v[0]+','+(-v[1])).join(' ')}" fill="${on?'#e08a2b':col}" fill-opacity="${on?.45:.22}" stroke="${on?'#e08a2b':col}" stroke-width="${px*1.5}" style="cursor:move"/>`;
+   if(on)for(const[x,sd]of[[o.x,0],[o.x+o.w,1]]){const c=P(S,e,x,-T/2);s+=`<circle data-oh="${e}|${t}|${i}|${sd}" cx="${c[0]}" cy="${-c[1]}" r="${px*13}" fill="#e08a2b" stroke="#fff" stroke-width="${px*2.5}" style="cursor:ew-resize"/>`;}});});}
  if(TAB==='space')S.poly.forEach((p,i)=>{s+=`<circle data-v="${i}" cx="${p[0]}" cy="${-p[1]}" r="${R*.7}" fill="${SEL&&SEL.v===i?'#e08a2b':'#1d1d1f'}" stroke="#fff" stroke-width="${R*.15}" style="cursor:grab"/>`;});
  if(TAB==='cab'){for(const[k,c,t]of[['sink','#1b6fd1','سینک'],['hob','#d1361b','گاز'],['fr','#555','یخچال']]){const m=S[k];if(m.e>=S.poly.length||(S.man&&S.man[String(m.e)]))continue;const p=P(S,m.e,m.x,S.baseD/2);
    s+=`<g data-m="${k}" style="cursor:grab"><circle cx="${p[0]}" cy="${-p[1]}" r="${R*1.15}" fill="${c}" fill-opacity=".9" stroke="#fff" stroke-width="${R*.12}"/><text x="${p[0]}" y="${-p[1]}" font-size="${R*.62}" text-anchor="middle" dominant-baseline="middle" fill="#fff" font-family="Vazirmatn,Arial" font-weight="700" pointer-events="none">${t}</text></g>`;}
@@ -660,7 +663,7 @@ function sideSpace(){if(DRAW){$('side').innerHTML=`<div class="card"><h3>رسم 
  <div class="chips" style="margin-top:8px"><button class="btn ${S.pOpen?'on':''}" data-a="ptog" data-k="pOpen">${S.pOpen?'✓ ':''}اوپن</button><button class="btn ${S.pIsl?'on':''}" data-a="ptog" data-k="pIsl">${S.pIsl?'✓ ':''}با جزیره</button></div>
  <div class="row" style="margin-top:10px">${num('qW','عرض (mm)',W||4000)}${num('qD','عمق (mm)',Dd||3200)}${num('H','ارتفاع سقف',S.H)}</div>
  <p class="row" style="margin-top:8px"><button class="btn p" data-a="pre" data-k="${S.preset||'L'}">اعمال ابعاد</button><button class="btn ${SNAP?'on':''}" data-a="snap">گوشه‌ها قائم بچسبند</button></p>
- <p class="hint">گوشه‌ها را بکشید تا دیوار کج، کوتاه یا بلند شود. روی هر دیوار بزنید تا طولش را دقیق بدهید یا پنجره و در بگذارید. اعداد به میلی‌متر است.</p></div>`;
+ <p class="hint">گوشه‌ها را بکشید تا دیوار کج، کوتاه یا بلند شود. پنجره (آبی) و در (سبز) را روی دیوار بکشید تا جابه‌جا شوند — حتی به دیوار دیگر — و با زدن رویشان عرض، اوکابه و ارتفاع را بدهید. روی هر دیوار بزنید تا طولش را دقیق بدهید یا پنجره و در بگذارید. اعداد به میلی‌متر است.</p></div>`;
  {const L=projList(),ks=Object.keys(L);h+=`<div class="card"><h3>پروژه‌ها</h3><div class="row"><label>نام پروژه / مشتری<input data-k="title" value="${(S.title||'').replace(/"/g,'&quot;')}" placeholder="مثلاً آشپزخانه آقای …"></label></div><p class="row" style="margin-top:8px"><button class="btn p" data-a="psave">ذخیره</button><button class="btn" data-a="pnew">پروژه جدید</button><button class="btn" data-a="pexp">خروجی فایل</button><label class="btn" style="flex:0;flex-direction:row;color:var(--ink);font-size:14px">باز کردن فایل<input type="file" id="pimp" accept=".json,application/json" hidden></label></p>${ks.length?ks.map(k=>`<div class="op row"><b style="flex:1">${k.replace(/</g,'&lt;')}</b><button class="btn" data-a="popen" data-k="${encodeURIComponent(k)}">باز کن</button><button class="btn d" data-a="pdel" data-k="${encodeURIComponent(k)}">🗑</button></div>`).join(''):'<p class="hint">هنوز پروژه‌ای ذخیره نشده است.</p>'}<p class="hint">پروژه‌ها روی همین دستگاه ذخیره می‌شوند. برای انتقال به دستگاه دیگر «خروجی فایل» بگیرید.</p></div>`;}
  if(SEL&&SEL.e!=null){const i=SEL.e,E=S.edges[i],g=eg(S,i);
   h+=`<div class="card"><h3>دیوار ${LET(i)}</h3><div class="row">${num('eLen','طول (mm)',g.len)}</div>
@@ -691,6 +694,8 @@ function sideCab(){const st=[['modern','مدرن'],['neoclassic','نئوکلاس
  ${Object.keys(S.man||{}).length?`<div class="card"><h3>دیوارهای ویرایش دستی</h3><p class="hint">این دیوارها در «نماها» دستی چیده شده‌اند و با کشیدن نماد روی همان دیوار به خودکار برمی‌گردند.</p><div class="chips">${Object.keys(S.man).map(k=>`<button class="btn" data-a="unman" data-k="${k}">بازگشت ${k==='ISL'?'جزیره':LET(+k)} به خودکار</button>`).join('')}</div></div>`:''}
  <p><button class="btn p" data-a="go">ویرایش روی نماها ←</button></p>`;}
 function etb(){const t=$('etb');if(TAB==='cab'){if(!vtb(t))t.innerHTML=`<b>انتخاب:</b><button class="btn ${(EV.layer||'b')==='b'?'on':''}" data-ly="b">کابینت زمینی</button><button class="btn ${EV.layer==='w'?'on':''}" data-ly="w">کابینت هوایی</button>${S.isl.on?'<button class="btn d" data-a="delisl">🗑 حذف جزیره</button>':''}`;return;}$('efab').style.display='none';if(TAB!=='space'||DRAW||!SEL){t.innerHTML='';return;}
+ if(SEL.o){const o=S.edges[SEL.e][SEL.o.t][SEL.o.i];if(!o){SEL={e:SEL.e};}else{const w=SEL.o.t==='win',pf=(w?'ow':'od')+'.'+SEL.o.i+'.',f=(k,l)=>`<span style="font-size:12px;color:var(--mut)">${l}</span><input type="number" inputmode="numeric" data-k="${pf}${k}" value="${o[k]}" style="width:70px">`;
+  t.innerHTML=`<b>${w?'پنجره':'در'} · دیوار ${LET(SEL.e)}</b>${f('x','فاصله')}${f('w','عرض')}${w?f('sill','اوکابه'):''}${f('h','ارتفاع')}<button class="btn d" data-a="delo">🗑 حذف</button><button class="btn" data-a="close">✕</button>`;return;}}
  if(SEL.v!=null){t.innerHTML=`<b>گوشه ${SEL.v+1}</b><span class="hint">گوشه را بکشید</span><button class="btn" data-a="close">✕</button>`;return;}
  const i=SEL.e,E=S.edges[i];t.innerHTML=`<b>دیوار ${LET(i)}</b><input type="number" inputmode="numeric" data-k="eLen" value="${eg(S,i).len}">
  ${E.w?'<button class="btn d" data-a="wall">🗑 حذف دیوار (باز بماند)</button>':'<button class="btn p" data-a="wall">+ دیوار بگذار</button>'}<button class="btn" data-a="split">+ گوشه</button>${E.w?'<button class="btn" data-a="win">+ پنجره</button><button class="btn" data-a="door">+ در</button>':''}<button class="btn" data-a="close">✕</button>`;}
@@ -727,7 +732,8 @@ function snapPt(w){let p=[Math.round(w[0]/50)*50,Math.round(w[1]/50)*50];const q
 $('esvg').addEventListener('pointerdown',ev=>{const t=ev.target,d=t.dataset||{},g=t.closest&&t.closest('[data-m]');const w=world(ev);
  if(DRAW){const p=snapPt(w),f=DRAW[0];if(DRAW.length>2&&Math.hypot(p[0]-f[0],p[1]-f[1])<VB[2]/40){finishDraw();compute();drawEditor();side();store();return;}
   const l=DRAW[DRAW.length-1];if(!l||Math.hypot(p[0]-l[0],p[1]-l[1])>100)DRAW.push(p);drawEditor();side();ev.preventDefault();return;}
- if(TAB==='space'&&d.v!=null){DRAG={v:+d.v,moved:0};SEL={v:+d.v};}
+ if(TAB==='space'&&(d.o||d.oh)){const[e,t,i,sd]=(d.o||d.oh).split('|'),o=S.edges[+e][t][+i],g=eg(S,+e);SEL={e:+e,o:{t,i:+i}};DRAG={op:o,t,e:+e,sd:d.oh?+sd:null,off:dot(sub(w,g.o),g.d)-o.x,moved:0};try{$('esvg').setPointerCapture(ev.pointerId);}catch(_){}drawEditor();side();}
+ else if(TAB==='space'&&d.v!=null){DRAG={v:+d.v,moved:0};SEL={v:+d.v};}
  else if(TAB==='cab'&&g)DRAG={m:g.dataset.m,moved:0};
  else if(TAB==='cab'&&(d.pu||d.ph)){const[k,L,i,sd]=(d.pu||d.ph).split('|'),it=elvList().find(x=>x.k===k),gg=eg(S,k==='ISL'?'ISL':+k),s=dot(sub(w,gg.o),gg.d);if(it)beginDrag(ev,$('esvg'),it,L,+i,s,pxU($('esvg'),VB)*28,d.ph?+sd:null);return;}
  else if(TAB==='cab'&&d.ih){DRAG={ih:d.ih,moved:0};try{$('esvg').setPointerCapture(ev.pointerId);}catch(e){}}
@@ -736,6 +742,12 @@ $('esvg').addEventListener('pointerdown',ev=>{const t=ev.target,d=t.dataset||{},
  else{DRAG={pan:1,cx:ev.clientX,cy:ev.clientY,vb:VB.slice(),moved:0};try{$('esvg').setPointerCapture(ev.pointerId);}catch(e){}return;}
  ev.preventDefault();});
 addEventListener('pointermove',ev=>{if(EV.drag&&TAB==='cab'){const it=curRun2();if(it){const gg=eg(S,it.k==='ISL'?'ISL':+it.k);dragMove(dot(sub(world(ev),gg.o),gg.d));}return;}if(DRAW&&ev.target.closest&&ev.target.closest('#esvg')){HOV=snapPt(world(ev));drawEditor();return;}if(!DRAG)return;if(DRAG.pan){const k=VB[2]/Math.max(1,$('esvg').clientWidth),dx=ev.clientX-DRAG.cx,dy=ev.clientY-DRAG.cy;if(Math.abs(dx)+Math.abs(dy)>4)DRAG.moved=1;VB=[DRAG.vb[0]-dx*k,DRAG.vb[1]-dy*k,VB[2],VB[3]];$('esvg').setAttribute('viewBox',VB.join(' '));return;}const w=world(ev);DRAG.moved++;
+ if(DRAG.op){const o=DRAG.op,r=x=>Math.round(x/10)*10;let e=DRAG.e,g=eg(S,e);
+  if(DRAG.sd==null){let best=null;S.edges.forEach((E,k)=>{if(!E.w)return;const gg=eg(S,k),s=Math.max(0,Math.min(gg.len,dot(sub(w,gg.o),gg.d))),q=P(S,k,s,0),dd=Math.hypot(w[0]-q[0],w[1]-q[1]);if(!best||dd<best.d)best={d:dd,k};});
+   if(best&&best.k!==e&&best.d<600&&eg(S,best.k).len>=o.w){const A=S.edges[e][DRAG.t];A.splice(A.indexOf(o),1);S.edges[best.k][DRAG.t].push(o);if(S.man){delete S.man[String(e)];}e=DRAG.e=best.k;g=eg(S,e);DRAG.off=o.w/2;SEL={e,o:{t:DRAG.t,i:S.edges[e][DRAG.t].length-1}};}
+   o.x=Math.max(0,Math.min(g.len-o.w,r(dot(sub(w,g.o),g.d)-DRAG.off)));}
+  else{const s=r(dot(sub(w,g.o),g.d));if(DRAG.sd){o.w=Math.max(300,Math.min(g.len-o.x,s-o.x));}else{const x1=o.x+o.w,x=Math.max(0,Math.min(x1-300,s));o.x=x;o.w=x1-x;}}
+  if(S.man&&S.man[String(e)])delete S.man[String(e)];redraw();etb();return;}
  if(DRAG.v!=null){const n=S.poly.length,v=DRAG.v;let p=[Math.round(w[0]/10)*10,Math.round(w[1]/10)*10];
   if(SNAP)for(const q of[S.poly[(v-1+n)%n],S.poly[(v+1)%n]]){if(Math.abs(p[0]-q[0])<150)p[0]=q[0];if(Math.abs(p[1]-q[1])<150)p[1]=q[1];}
   S.poly[v]=p;redraw();}
@@ -770,6 +782,8 @@ const sideClick=ev=>{const b=ev.target.closest('[data-a]');if(!b)return;const a=
  if(a==='wall'&&E){E.w=E.w?0:1;if(!E.w)E.cab=0;}
  if(a==='win'&&E){const L=eg(S,SEL.e).len;E.win.push({x:Math.max(0,Math.round(L/2-500)),w:Math.min(1000,L-200),sill:1100,h:1200});}
  if(a==='door'&&E){const L=eg(S,SEL.e).len;E.door.push({x:Math.max(0,Math.round(L/2-450)),w:900,h:2100});}
+ if(a==='delo'&&SEL&&SEL.o){S.edges[SEL.e][SEL.o.t].splice(SEL.o.i,1);SEL={e:SEL.e};}
+ if((a==='delw'||a==='deld')&&SEL)SEL={e:SEL.e};
  if(a==='delw'&&E)E.win.splice(+b.dataset.k,1);
  if(a==='deld'&&E)E.door.splice(+b.dataset.k,1);
  if(a==='split'&&E){split(SEL.e);SEL=null;}
