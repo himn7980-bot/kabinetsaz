@@ -64,12 +64,13 @@ th{background:#f7f4ef}.tw{overflow:auto;max-height:60vh}
 <main>
 <div id="edwrap" class="wrap"><div id="ed"><div class="tb" id="etb"></div><button class="btn fab" id="efab" style="display:none">🗑 حذف</button><div class="zm" style="position:absolute;bottom:8px;left:8px;display:flex;gap:4px;z-index:2"><button class="btn" data-z="1">＋</button><button class="btn" data-z="-1">－</button><button class="btn" data-z="0">⤢</button></div><svg id="esvg" xmlns="http://www.w3.org/2000/svg"><g id="eg"></g></svg></div><div id="side"></div></div>
 <section class="tab" id="t-elv"><div class="chips" id="vchips" style="margin:4px 0 8px"></div><div class="wrap"><div id="ved"><div class="tb" id="vtb"></div><button class="btn fab" id="vfab" style="display:none">🗑 حذف</button><div style="position:absolute;bottom:8px;left:8px;display:flex;gap:4px;z-index:2"><button class="btn" data-vz="1">＋</button><button class="btn" data-vz="-1">－</button><button class="btn" data-vz="0">⤢</button></div><div style="background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden"><svg id="vsvg" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:58vh;touch-action:none;user-select:none"><g id="vg"></g></svg></div></div><div id="vside"></div></div></section>
-<section class="tab" id="t-v3"><div id="v3c" style="position:relative;background:#f4f2ee;border:1px solid var(--line);border-radius:12px;overflow:hidden;height:66vh;touch-action:none"></div><p class="hint" id="v3msg">با یک انگشت بچرخانید، با دو انگشت (یا چرخ ماوس) زوم کنید. دیوارهای جلوی دوربین خودکار پنهان می‌شوند.</p></section>
+<section class="tab" id="t-v3"><div id="v3c" style="position:relative;background:#f4f2ee;border:1px solid var(--line);border-radius:12px;overflow:hidden;height:66vh;touch-action:none"></div><p class="row" style="margin-top:8px"><button class="btn p" data-ar="view">📱 دیدن طرح در فضای واقعی (AR)</button></p><p class="hint" id="v3msg">با یک انگشت بچرخانید، با دو انگشت (یا چرخ ماوس) زوم کنید. دیوارهای جلوی دوربین خودکار پنهان می‌شوند.</p></section>
 <section class="tab" id="t-dwg"></section>
 <section class="tab" id="t-cost"></section>
 <section class="tab" id="t-adv"></section>
 </main>
 <div id="toast"></div>
+<div id="arui" style="display:none;position:fixed;inset:0;z-index:50;flex-direction:column;justify-content:space-between;pointer-events:none"><div id="artxt" style="background:rgba(0,0,0,.65);color:#fff;padding:12px;text-align:center;line-height:1.8;pointer-events:auto"></div><div id="arbtn" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:16px;pointer-events:auto"></div></div>
 <script>
 /* ================= CORE ================= */
 const DEF={proj:'KITCHEN-01',H:2800,wallT:200,style:'modern',
@@ -662,7 +663,7 @@ function sideSpace(){if(DRAW){$('side').innerHTML=`<div class="card"><h3>رسم 
  let h=`<div class="card"><h3>نوع فضا</h3><div class="chips">${PR.map(([k,t])=>`<button class="btn ${S.preset===k?'on':''}" data-a="pre" data-k="${k}">${t}</button>`).join('')}<button class="btn" data-a="draw">✏️ رسم آزاد</button></div>
  <div class="chips" style="margin-top:8px"><button class="btn ${S.pOpen?'on':''}" data-a="ptog" data-k="pOpen">${S.pOpen?'✓ ':''}اوپن</button><button class="btn ${S.pIsl?'on':''}" data-a="ptog" data-k="pIsl">${S.pIsl?'✓ ':''}با جزیره</button></div>
  <div class="row" style="margin-top:10px">${num('qW','عرض (mm)',W||4000)}${num('qD','عمق (mm)',Dd||3200)}${num('H','ارتفاع سقف',S.H)}</div>
- <p class="row" style="margin-top:8px"><button class="btn p" data-a="pre" data-k="${S.preset||'L'}">اعمال ابعاد</button><button class="btn ${SNAP?'on':''}" data-a="snap">گوشه‌ها قائم بچسبند</button></p>
+ <p class="row" style="margin-top:8px"><button class="btn p" data-a="pre" data-k="${S.preset||'L'}">اعمال ابعاد</button><button class="btn ${SNAP?'on':''}" data-a="snap">گوشه‌ها قائم بچسبند</button><button class="btn" data-ar="measure">📷 برداشت ابعاد با دوربین (AR)</button></p>
  <p class="hint">گوشه‌ها را بکشید تا دیوار کج، کوتاه یا بلند شود. پنجره (آبی) و در (سبز) را روی دیوار بکشید تا جابه‌جا شوند — حتی به دیوار دیگر — و با زدن رویشان عرض، اوکابه و ارتفاع را بدهید. روی هر دیوار بزنید تا طولش را دقیق بدهید یا پنجره و در بگذارید. اعداد به میلی‌متر است.</p></div>`;
  {const L=projList(),ks=Object.keys(L);h+=`<div class="card"><h3>پروژه‌ها</h3><div class="row"><label>نام پروژه / مشتری<input data-k="title" value="${(S.title||'').replace(/"/g,'&quot;')}" placeholder="مثلاً آشپزخانه آقای …"></label></div><p class="row" style="margin-top:8px"><button class="btn p" data-a="psave">ذخیره</button><button class="btn" data-a="pnew">پروژه جدید</button><button class="btn" data-a="pexp">خروجی فایل</button><label class="btn" style="flex:0;flex-direction:row;color:var(--ink);font-size:14px">باز کردن فایل<input type="file" id="pimp" accept=".json,application/json" hidden></label></p>${ks.length?ks.map(k=>`<div class="op row"><b style="flex:1">${k.replace(/</g,'&lt;')}</b><button class="btn" data-a="popen" data-k="${encodeURIComponent(k)}">باز کن</button><button class="btn d" data-a="pdel" data-k="${encodeURIComponent(k)}">🗑</button></div>`).join(''):'<p class="hint">هنوز پروژه‌ای ذخیره نشده است.</p>'}<p class="hint">پروژه‌ها روی همین دستگاه ذخیره می‌شوند. برای انتقال به دستگاه دیگر «خروجی فایل» بگیرید.</p></div>`;}
  if(SEL&&SEL.e!=null){const i=SEL.e,E=S.edges[i],g=eg(S,i);
@@ -1014,6 +1015,38 @@ function draw3(){load3(()=>{const el=$('v3c'),c=full();if(!c)return;const TH=win
  const w=el.clientWidth,h=el.clientHeight;r.setSize(w,h);const cam=new TH.PerspectiveCamera(45,w/h,0.05,200);
  T3.draw=()=>{const cp=Math.cos(T3.ph),x=tg[0]+T3.d*cp*Math.sin(T3.th),y=tg[1]+T3.d*Math.sin(T3.ph),z=tg[2]+T3.d*cp*Math.cos(T3.th);cam.position.set(x,y,z);cam.lookAt(tg[0],tg[1],tg[2]);dl.position.set(x+1,y+3,z+1);
   for(const W of walls)W.me.visible=(x-W.mid[0])*W.n[0]+(z-W.mid[1])*W.n[1]>0;r.render(sc,cam);};T3.draw();});}
+let AROK=null;(async()=>{try{AROK=!!(navigator.xr&&await navigator.xr.isSessionSupported('immersive-ar'));}catch(e){AROK=false;}if(AROK)load3(()=>{});})();
+for(const id of['artxt','arbtn'])$(id).addEventListener('beforexrselect',e=>e.preventDefault());
+document.addEventListener('click',ev=>{const b=ev.target.closest('[data-ar]');if(b)startAR(b.dataset.ar);});
+async function startAR(mode){if(!AROK||!window.THREE){if(AROK&&!window.THREE){load3(()=>{});return note('در حال آماده‌سازی… چند ثانیه دیگر دوباره بزنید.');}return note('AR فقط در مرورگر Chrome اندروید (گوشی دارای Google AR) و از نسخه وب کار می‌کند: himn7980-bot.github.io/kabinetsaz');}
+ const TH=window.THREE,ui=$('arui'),txt=$('artxt'),btn=$('arbtn'),c=full();if(mode==='view'&&(!c||!c.D.runs.length))return note('اول در مرحله ۲ کابینت بگذارید.');
+ let session;ui.style.display='flex';try{session=await navigator.xr.requestSession('immersive-ar',{requiredFeatures:['hit-test'],optionalFeatures:['dom-overlay'],domOverlay:{root:ui}});}catch(e){ui.style.display='none';return note('AR شروع نشد: '+(e.message||e));}
+ const r=new TH.WebGLRenderer({antialias:true,alpha:true});r.setPixelRatio(window.devicePixelRatio||1);r.xr.enabled=true;r.xr.setReferenceSpaceType('local');
+ try{await r.xr.setSession(session);}catch(e){ui.style.display='none';try{session.end();}catch(_){}return note('AR شروع نشد: '+(e.message||e));}
+ const sc=new TH.Scene(),cam=new TH.PerspectiveCamera();sc.add(new TH.HemisphereLight(0xffffff,0x8a8a8a,1));const dl=new TH.DirectionalLight(0xffffff,0.6);dl.position.set(1,3,2);sc.add(dl);
+ const ret=new TH.Mesh(new TH.RingGeometry(0.05,0.07,28).rotateX(-Math.PI/2),new TH.MeshBasicMaterial({color:0xe08a2b}));ret.matrixAutoUpdate=false;ret.visible=false;sc.add(ret);
+ const dot3=(p,col)=>{const m=new TH.Mesh(new TH.SphereGeometry(0.025,12,8),new TH.MeshBasicMaterial({color:col||0xe08a2b}));m.position.copy(p);sc.add(m);return m;};
+ let hts=null;try{const viewer=await session.requestReferenceSpace('viewer');hts=await session.requestHitTestSource({space:viewer});}catch(e){}
+ let hit=null,done=false;const pts=[],marks=[];let line=null,grp=null,step=0,p1=null;
+ const B=(l,f,p)=>{const x=document.createElement('button');x.className='btn'+(p?' p':'');x.textContent=l;x.style.fontSize='15px';x.style.padding='10px 14px';x.onclick=f;btn.appendChild(x);};
+ const redoLine=()=>{if(line){sc.remove(line);line.geometry.dispose();}if(pts.length>1){line=new TH.Line(new TH.BufferGeometry().setFromPoints(pts),new TH.LineBasicMaterial({color:0xe08a2b}));sc.add(line);}else line=null;};
+ btn.innerHTML='';
+ if(mode==='measure'){txt.textContent='گوشی را آرام حرکت دهید تا حلقه نارنجی روی کف دیده شود. حلقه را روی اولین گوشه اتاق (پای دیوار) ببرید و صفحه را لمس کنید؛ بعد به ترتیب گوشه‌های بعدی.';
+  B('پایان و ساخت پلان',()=>{if(pts.length<3)return void(txt.textContent='حداقل ۳ گوشه لازم است.');done=true;session.end();},1);B('برگرد',()=>{if(!pts.length)return;pts.pop();sc.remove(marks.pop());redoLine();txt.textContent=pts.length+' گوشه ثبت شده.';});B('خروج',()=>session.end());}
+ else{const run=c.D.runs[0],wl=LET(run.wall);txt.textContent=`حلقه نارنجی را روی کف، پای گوشه چپ دیوار ${wl} ببرید (وقتی رو به آن دیوار ایستاده‌اید) و صفحه را لمس کنید.`;
+  B('از نو',()=>{step=0;if(grp){sc.remove(grp);grp=null;}marks.splice(0).forEach(m=>sc.remove(m));txt.textContent=`دوباره: گوشه چپ دیوار ${wl} را روی کف لمس کنید.`;},1);B('خروج',()=>session.end());}
+ session.addEventListener('select',()=>{if(!hit)return;const p=hit.clone();
+  if(mode==='measure'){pts.push(p);marks.push(dot3(p));redoLine();const n=pts.length;txt.textContent=n<2?'گوشه ۱ ثبت شد. حالا گوشه بعدی.':`گوشه ${n} ثبت شد — طول این دیوار: ${Math.round(pts[n-1].distanceTo(pts[n-2])*100)} سانت. گوشه بعدی را بزنید یا «پایان».`;return;}
+  const run=c.D.runs[0],g=eg(S,run.wall),wl=LET(run.wall);
+  if(step===0){p1=p;marks.push(dot3(p));step=1;txt.textContent=`حالا گوشه راست همان دیوار ${wl} را روی کف لمس کنید.`;return;}
+  if(step===1){const G={},res=to3D(S,c.D,'x',(q,faces,m,o)=>{if(/^(WALL|WINDOW|FLOOR)/.test(o))return;const a=G[m]||(G[m]=[]);for(const f of faces)for(let i=1;i<f.length-1;i++)for(const k of[f[0],f[i],f[i+1]])a.push(q[k][0]/1000,q[k][1]/1000,q[k][2]/1000);});
+   const inner=new TH.Group();for(const m in G){const ge=new TH.BufferGeometry();ge.setAttribute('position',new TH.Float32BufferAttribute(G[m],3));ge.computeVertexNormals();inner.add(new TH.Mesh(ge,new TH.MeshLambertMaterial({color:new TH.Color(res.mats[m]||'#ccc'),transparent:m==='Glass',opacity:m==='Glass'?0.35:1,side:TH.DoubleSide})));}
+   inner.position.set(-g.o[0]/1000,0,g.o[1]/1000);grp=new TH.Group();grp.add(inner);grp.position.set(p1.x,p1.y,p1.z);grp.rotation.y=Math.atan2(p.x-p1.x,p.z-p1.z)-Math.atan2(g.d[0],-g.d[1]);sc.add(grp);marks.splice(0).forEach(m=>sc.remove(m));step=2;
+   txt.textContent=`طرح روی دیوار ${wl} قرار گرفت (فاصله دو نقطه: ${Math.round(p.distanceTo(p1)*100)} سانت؛ طول دیوار در طرح: ${Math.round(g.len/10)} سانت). برای تنظیم دوباره «از نو» را بزنید.`;}});
+ r.setAnimationLoop((t,frame)=>{if(frame&&hts){const res=frame.getHitTestResults(hts);if(res.length){const pose=res[0].getPose(r.xr.getReferenceSpace());if(pose){ret.visible=step<2;ret.matrix.fromArray(pose.transform.matrix);hit=new TH.Vector3().setFromMatrixPosition(ret.matrix);}}else{ret.visible=false;hit=null;}}r.render(sc,cam);});
+ session.addEventListener('end',()=>{r.setAnimationLoop(null);ui.style.display='none';try{r.dispose();}catch(_){}
+  if(mode==='measure'&&done&&pts.length>=3){const a=Math.atan2(pts[1].z-pts[0].z,pts[1].x-pts[0].x),ca=Math.cos(-a),sa=Math.sin(-a);
+   DRAW=pts.map(p=>{const x=p.x-pts[0].x,z=p.z-pts[0].z;return[Math.round((x*ca-z*sa)*100)*10,-Math.round((x*sa+z*ca)*100)*10];});finishDraw();store();compute();go('space');note('پلان از برداشت دوربین ساخته شد. دقت AR چند سانت خطا دارد؛ طول هر دیوار را با متر کنترل و اصلاح کنید.');}});}
 function projList(){try{return JSON.parse(localStorage.getItem('kabP')||'{}');}catch(e){return{};}}
 function loadProj(o){if(!o||!o.poly||!o.edges||o.edges.length!==o.poly.length)return toast('فایل پروژه معتبر نیست');S=Object.assign(clone(DEF),o);fixOrient(S);SEL=null;EV.sel=null;store();compute();setVB();go('space');toast('پروژه باز شد');}
 document.addEventListener('change',ev=>{if(ev.target.id!=='pimp')return;const f=ev.target.files[0];if(!f)return;const fr=new FileReader();fr.onload=()=>{try{loadProj(JSON.parse(fr.result));}catch(e){toast('فایل پروژه خوانده نشد');}};fr.readAsText(f);});
