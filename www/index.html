@@ -64,12 +64,13 @@ th{background:#f7f4ef}.tw{overflow:auto;max-height:60vh}
 <main>
 <div id="edwrap" class="wrap"><div id="ed"><div class="tb" id="etb"></div><button class="btn fab" id="efab" style="display:none">🗑 حذف</button><div class="zm" style="position:absolute;bottom:8px;left:8px;display:flex;gap:4px;z-index:2"><button class="btn" data-z="1">＋</button><button class="btn" data-z="-1">－</button><button class="btn" data-z="0">⤢</button></div><svg id="esvg" xmlns="http://www.w3.org/2000/svg"><g id="eg"></g></svg></div><div id="side"></div></div>
 <section class="tab" id="t-elv"><div class="chips" id="vchips" style="margin:4px 0 8px"></div><div class="wrap"><div id="ved"><div class="tb" id="vtb"></div><button class="btn fab" id="vfab" style="display:none">🗑 حذف</button><div style="position:absolute;bottom:8px;left:8px;display:flex;gap:4px;z-index:2"><button class="btn" data-vz="1">＋</button><button class="btn" data-vz="-1">－</button><button class="btn" data-vz="0">⤢</button></div><div style="background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden"><svg id="vsvg" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:58vh;touch-action:none;user-select:none"><g id="vg"></g></svg></div></div><div id="vside"></div></div></section>
-<section class="tab" id="t-v3"><div id="v3c" style="position:relative;background:#f4f2ee;border:1px solid var(--line);border-radius:12px;overflow:hidden;height:66vh;touch-action:none"></div><p class="row" style="margin-top:8px"><button class="btn p" data-ar="view">📱 دیدن طرح در فضای واقعی (AR)</button></p><p class="hint" id="v3msg">با یک انگشت بچرخانید، با دو انگشت (یا چرخ ماوس) زوم کنید. دیوارهای جلوی دوربین خودکار پنهان می‌شوند.</p></section>
+<section class="tab" id="t-v3"><div id="v3bar" style="margin-bottom:8px"></div><div id="v3c" style="position:relative;background:#f4f2ee;border:1px solid var(--line);border-radius:12px;overflow:hidden;height:66vh;touch-action:none"><div id="joy" style="display:none;position:absolute;left:16px;bottom:16px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.35);border:2px solid rgba(255,255,255,.8);touch-action:none;z-index:3"><div style="position:absolute;left:35px;top:35px;width:40px;height:40px;border-radius:50%;background:rgba(29,29,31,.75);pointer-events:none"></div></div></div><p class="row" style="margin-top:8px"><button class="btn p" data-ar="view">📱 دیدن طرح در فضای واقعی (AR)</button></p><p class="hint" id="v3msg">با یک انگشت بچرخانید، با دو انگشت زوم کنید. روی درب‌ها، کشوها، گاز و شیر آب بزنید تا باز/روشن شوند. در «قدم زدن» با دایره پایین چپ (یا کلیدهای W A S D) راه بروید و با کشیدن صفحه به اطراف نگاه کنید.</p></section>
 <section class="tab" id="t-dwg"></section>
 <section class="tab" id="t-cost"></section>
 <section class="tab" id="t-adv"></section>
 </main>
 <div id="toast"></div>
+<div id="mepd" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:40;align-items:center;justify-content:center"><div class="card" style="width:min(1000px,97vw);max-height:95vh;overflow:auto;margin:0"><div id="mepTop"></div><div style="background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:8px 0"><svg id="msvg" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:46vh;touch-action:none;direction:ltr"><g id="mg"></g></svg></div><div id="mepSide"></div></div></div>
 <div id="arui" style="display:none;position:fixed;inset:0;z-index:50;flex-direction:column;justify-content:space-between;pointer-events:none"><div id="artxt" style="background:rgba(0,0,0,.65);color:#fff;padding:12px;text-align:center;line-height:1.8;pointer-events:auto"></div><div id="arbtn" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:16px;pointer-events:auto"></div></div>
 <script>
 /* ================= CORE ================= */
@@ -137,6 +138,13 @@ function stdMsg(u){const w=Math.round(u.x1-u.x0),nm=TL[u.type],cm=a=>a.map(x=>x/
  if(u.type==='fridge')return w>=700&&w<=950?null:`جای یخچال ${w/10} سانت شد؛ استاندارد ۷۰ تا ۹۵ سانت است. تغییر اعمال شد.`;
  const std=u.L==='w'?[300,350,400,450,500,600,800,900]:[150,200,250,300,350,400,450,500,600,800,900];
  return std.includes(w)?null:`«${nm}» ${w/10} سانت شد؛ عرض‌های استاندارد: ${cm(std)} سانت. تغییر اعمال شد (سفارشی‌سازی).`;}
+const PTC={cw:['CW','Cold water'],hw:['HW','Hot water'],dr:['DR','Drain'],gas:['GAS','Gas valve'],s:['S','Socket'],s32:['S32','Electric hob socket 32A'],fr:['SF','Fridge socket'],duct:['DUCT','Hood duct'],sw:['SW','Light switch']};
+function userMep(S){return S.pts.filter(p=>p.e<S.poly.length&&PTC[p.t]).map((p,k)=>({wall:LET(p.e),c:PTC[p.t][0]+'-'+LET(p.e)+(k+1),x:Math.round(p.x),h:Math.round(p.h),desc:PTC[p.t][1]+' - existing on site'}));}
+function ptsChk(D,S){const P=S.pts||[];if(!P.length)return;
+ for(const[ut,types,nm,pn]of[['sink',['dr'],'سینک','فاضلاب'],['hob',['gas','s32'],'گاز','شیر گاز']]){const u=D.all.find(q=>q.type===ut),ps=P.filter(p=>types.includes(p.t));if(!u||!ps.length)continue;
+  const e=u.run==='ISL'?-1:u.run.charCodeAt(0)-65,same=ps.filter(p=>p.e===e),c=(u.x0+u.x1)/2;
+  if(!same.length)D.warns.push(`${nm} روی دیوار ${u.run} است ولی نقطه ${pn} روی دیوار ${LET(ps[0].e)} است.`);
+  else{const dd=Math.min(...same.map(p=>Math.abs(p.x-c)));if(dd>450)D.warns.push(`محور ${nm} ${Math.round(dd/10)} سانت با نقطه ${pn} فاصله دارد (حداکثر پیشنهادی ۴۵ سانت).`);}}}
 function manChk(R,warns){for(const u of R.base.concat(R.wu)){const m=stdMsg(u);if(m)warns.push(m.replace(' تغییر اعمال شد (سفارشی‌سازی).','').replace(' تغییر اعمال شد.',''));}const nm=R.isl?'جزیره':'دیوار '+LET(R.wall);
  for(const[lst,a,b]of[[R.base,R.u0,R.u1],[R.wu,R.w0,R.w1]]){lst.sort((p,q)=>p.x0-q.x0);let cur=a;
   for(let k=0;k<lst.length;k++){const u=lst[k];if(u.x0<cur-1&&k>0)warns.push(`${nm}: «${TL[u.type]}» با یونیت کناری روی هم افتاده است.`);
@@ -222,7 +230,7 @@ function design(S){
  let tri=null;const fr=all.find(u=>u.type==='fridge');
  if(RS&&RH&&fr){const p1=P(S,S.sink.e,S.sink.x,300),p2=P(S,S.hob.e,S.hob.x,300),p3=P(S,S.fr.e,(fr.x0+fr.x1)/2,300),d=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
   tri=Math.round(d(p1,p2)+d(p2,p3)+d(p3,p1));if(tri<3600||tri>7900)warns.push(`مثلث کار (سینک-گاز-یخچال) ${(tri/1000).toFixed(2)} متر است؛ محدوده استاندارد ۳٫۶ تا ۷٫۹ متر.`);}
- const D={runs,isl,G,warns:[...new Set(warns)],all,tri};D.mep=mep(D,S);return D;}
+ const D={runs,isl,G,warns:[...new Set(warns)],all,tri};D.mep=S.pts&&S.pts.length?userMep(S):mep(D,S);ptsChk(D,S);return D;}
 
 function fronts(u,R,S,G){const g=3,out=[],x0=u.x0,x1=u.x1,w=x1-x0,mid=(x0+x1)/2,hs=mid<R.len/2?'L':'R',z=u.z,h=u.h,t=S.t;
  const door=(a,b,zz,hh,hg)=>out.push({k:'door',x:a+g/2,z:zz+g/2,w:b-a-g,h:hh-g,hg});
@@ -536,9 +544,9 @@ function to3D(S,D,name,cb){let curO='';const V=[],O=[],mats={};let vi=1;const t=
   const sinks=R.base.filter(u=>u.type==='sink').map(u=>{const c=(u.x0+u.x1)/2,bw=Math.min(460,u.w-140);return[c-bw/2,c+bw/2];});
   counterSegs(R,1).forEach(([s0,s1],k)=>{obj(`WORKTOP_${LET(w)}_${k+1}`);let c=s0;for(const[a,b]of sinks.filter(h=>h[0]>s0&&h[1]<s1)){W(w,c,a,0,ct,zt0,zt1,TOP);W(w,a,b,0,110,zt0,zt1,TOP);W(w,a,b,500,ct,zt0,zt1,TOP);c=b;}W(w,c,s1,0,ct,zt0,zt1,TOP);});
   counterSegs(R,0).forEach(([s0,s1],k)=>{const sg=R.base.filter(u=>u.x0>=s0-1&&u.x1<=s1+1&&u.type!=='endp');if(sg.length){obj(`PLINTH_${LET(w)}_${k+1}`);W(w,sg[0].x0,sg[sg.length-1].x1,bd-70,bd-54,0,S.plinth,fc(null,'b'));}});
-  for(const u of R.base.concat(R.wu)){if(u.type==='void')continue;const pos=u.L,dd=pos==='w'?S.wallD:u.type==='endp'?S.isl.D:bd,cd=dd-t-2,C=u.code,ds=u.type==='glass'?'glass':(u.ds||S.door),see=u.type==='open'||u.cfg==='open'||['glass','alu','mullion'].includes(ds);
+  for(const u of R.base.concat(R.wu)){if(u.type==='void')continue;const pos=u.L,dd=pos==='w'?S.wallD:u.type==='endp'?S.isl.D:bd,cd=dd-t-2,C=u.code,ds=u.type==='glass'?'glass':(u.ds||S.door),see=1,shel=u.type==='open'||u.cfg==='open'||u.fr.some(f=>f.k==='door'||f.k==='flap');
    if(!['filler','endp','dw','fridge'].includes(u.type)){obj(C+'_carcass');
-    if(see){W(w,u.x0,u.x0+t,0,cd,u.z,u.z+u.h,CAR);W(w,u.x1-t,u.x1,0,cd,u.z,u.z+u.h,CAR);W(w,u.x0+t,u.x1-t,0,cd,u.z,u.z+t,CAR);W(w,u.x0+t,u.x1-t,0,cd,u.z+u.h-t,u.z+u.h,CAR);W(w,u.x0+t,u.x1-t,0,3,u.z+t,u.z+u.h-t,CAR);const k=u.h>700?3:2;for(let j=1;j<k;j++){const z=u.z+u.h*j/k;W(w,u.x0+t,u.x1-t,3,cd-20,z-t/2,z+t/2,CAR);}}
+    if(see){W(w,u.x0,u.x0+t,0,cd,u.z,u.z+u.h,CAR);W(w,u.x1-t,u.x1,0,cd,u.z,u.z+u.h,CAR);W(w,u.x0+t,u.x1-t,0,cd,u.z,u.z+t,CAR);W(w,u.x0+t,u.x1-t,0,cd,u.z+u.h-t,u.z+u.h,CAR);W(w,u.x0+t,u.x1-t,0,3,u.z+t,u.z+u.h-t,CAR);const k=shel?(u.h>700?3:2):1;for(let j=1;j<k;j++){const z=u.z+u.h*j/k;W(w,u.x0+t,u.x1-t,3,cd-20,z-t/2,z+t/2,CAR);}}
     else W(w,u.x0,u.x1,0,cd,u.z,u.z+u.h,CAR);}
    let k=0;for(const f of u.fr){k++;const nm=`${C}_${f.k}_${k}`;
     if(f.k==='open')continue;
@@ -549,7 +557,7 @@ function to3D(S,D,name,cb){let curO='';const V=[],O=[],mats={};let vi=1;const t=
      else if(f.lab==='OVEN'){W(w,x0,x1,dd-t,dd,z0,z1,BLK);W(w,x0+50,x1-50,dd,dd+3,z0+60,z1-150,GLS);W(w,x0+60,x0+72,dd,dd+35,z1-95,z1-83,APP);W(w,x1-72,x1-60,dd,dd+35,z1-95,z1-83,APP);W(w,x0+50,x1-50,dd+35,dd+50,z1-97,z1-81,APP);for(let j=0;j<3;j++)prism(w,'n',x0+f.w*(0.3+0.2*j),0,z1-40,14,dd,dd+16,APP,8);}
      else W(w,x0,x1,dd-t,dd,z0,z1,APP);continue;}
     const g=(u.hd||S.handle)==='gola'&&['door','drw','flap'].includes(f.k),lw=pos==='w'||f.k==='flap',ff=g?Object.assign({},f,{h:f.h-26,z:lw?f.z+26:f.z}):f;
-    obj(nm);door(w,ff,u,pos,dd);if(g)W(w,f.x,f.x+f.w,dd-t-22,dd-t+2,lw?f.z:f.z+f.h-26,lw?f.z+26:f.z+f.h,BLK);
+    obj(nm);door(w,ff,u,pos,dd);if(f.k==='drw'&&f.h>90){const bz=f.z+25,bh=Math.max(60,f.h-90),x0=u.x0+t+6,x1=u.x1-t-6,m=CAR;W(w,x0,x0+12,40,dd-t,bz,bz+bh,m);W(w,x1-12,x1,40,dd-t,bz,bz+bh,m);W(w,x0+12,x1-12,40,52,bz,bz+bh,m);W(w,x0+12,x1-12,dd-t-12,dd-t,bz,bz+bh,m);W(w,x0+12,x1-12,52,dd-t-12,bz,bz+8,m);}if(g)W(w,f.x,f.x+f.w,dd-t-22,dd-t+2,lw?f.z:f.z+f.h-26,lw?f.z+26:f.z+f.h,BLK);
     if(['door','drw','flap'].includes(f.k)||f.panel){const mk=O.length;obj(nm+'_handle');if(!handle(w,f,u,pos,dd))O.length=mk;}}
    if(u.type==='sink'){const c=(u.x0+u.x1)/2,bw=Math.min(460,u.w-140),a=c-bw/2,b=c+bw/2,zb=zt1-190;obj(C+'_sink_bowl');W(w,a,b,110,500,zb,zb+3,APP);W(w,a,a+3,110,500,zb,zt1+2,APP);W(w,b-3,b,110,500,zb,zt1+2,APP);W(w,a,b,110,113,zb,zt1+2,APP);W(w,a,b,497,500,zb,zt1+2,APP);prism(w,'z',c,305,0,22,zb+3,zb+6,BLK,10);
     obj(C+'_tap');prism(w,'z',c,60,0,24,zt1,zt1+12,APP,10);prism(w,'z',c,60,0,13,zt1+12,zt1+300,APP,10);W(w,c-10,c+10,60,240,zt1+280,zt1+300,APP);prism(w,'z',c,232,0,10,zt1+255,zt1+280,APP,8);W(w,c+24,c+70,54,66,zt1+40,zt1+50,APP);}
@@ -664,6 +672,8 @@ function sideSpace(){if(DRAW){$('side').innerHTML=`<div class="card"><h3>رسم 
  <div class="chips" style="margin-top:8px"><button class="btn ${S.pOpen?'on':''}" data-a="ptog" data-k="pOpen">${S.pOpen?'✓ ':''}اوپن</button><button class="btn ${S.pIsl?'on':''}" data-a="ptog" data-k="pIsl">${S.pIsl?'✓ ':''}با جزیره</button></div>
  <div class="row" style="margin-top:10px">${num('qW','عرض (mm)',W||4000)}${num('qD','عمق (mm)',Dd||3200)}${num('H','ارتفاع سقف',S.H)}</div>
  <p class="row" style="margin-top:8px"><button class="btn p" data-a="pre" data-k="${S.preset||'L'}">اعمال ابعاد</button><button class="btn ${SNAP?'on':''}" data-a="snap">گوشه‌ها قائم بچسبند</button><button class="btn" data-ar="measure">📷 برداشت ابعاد با دوربین (AR)</button></p>
+ <p class="row" style="margin-top:6px"><button class="btn" data-a="win">+ پنجره</button><button class="btn" data-a="door">+ در</button><button class="btn p" data-a="mep">📍 نقاط آب، فاضلاب، گاز و برق</button></p>
+ <p class="hint">برای افزودن پنجره/در یا نقاط تأسیسات اول روی دیوار مورد نظر بزنید. پنجره‌ها (آبی) و درها (سبز) را روی پلان بکشید، و با زدن رویشان اندازه بدهید یا حذف کنید.</p>
  <p class="hint">گوشه‌ها را بکشید تا دیوار کج، کوتاه یا بلند شود. پنجره (آبی) و در (سبز) را روی دیوار بکشید تا جابه‌جا شوند — حتی به دیوار دیگر — و با زدن رویشان عرض، اوکابه و ارتفاع را بدهید. روی هر دیوار بزنید تا طولش را دقیق بدهید یا پنجره و در بگذارید. اعداد به میلی‌متر است.</p></div>`;
  {const L=projList(),ks=Object.keys(L);h+=`<div class="card"><h3>پروژه‌ها</h3><div class="row"><label>نام پروژه / مشتری<input data-k="title" value="${(S.title||'').replace(/"/g,'&quot;')}" placeholder="مثلاً آشپزخانه آقای …"></label></div><p class="row" style="margin-top:8px"><button class="btn p" data-a="psave">ذخیره</button><button class="btn" data-a="pnew">پروژه جدید</button><button class="btn" data-a="pexp">خروجی فایل</button><label class="btn" style="flex:0;flex-direction:row;color:var(--ink);font-size:14px">باز کردن فایل<input type="file" id="pimp" accept=".json,application/json" hidden></label></p>${ks.length?ks.map(k=>`<div class="op row"><b style="flex:1">${k.replace(/</g,'&lt;')}</b><button class="btn" data-a="popen" data-k="${encodeURIComponent(k)}">باز کن</button><button class="btn d" data-a="pdel" data-k="${encodeURIComponent(k)}">🗑</button></div>`).join(''):'<p class="hint">هنوز پروژه‌ای ذخیره نشده است.</p>'}<p class="hint">پروژه‌ها روی همین دستگاه ذخیره می‌شوند. برای انتقال به دستگاه دیگر «خروجی فایل» بگیرید.</p></div>`;}
  if(SEL&&SEL.e!=null){const i=SEL.e,E=S.edges[i],g=eg(S,i);
@@ -678,11 +688,13 @@ function sideSpace(){if(DRAW){$('side').innerHTML=`<div class="card"><h3>رسم 
 function pvSVG(ds,hd){const b=Bld(),u={ds,hd};drawFront(b,{k:'drw',x:0,z:560,w:600,h:157},S,'b',u);drawFront(b,{k:'door',x:0,z:0,w:297,h:557,hg:'L'},S,'b',u);drawFront(b,{k:'door',x:303,z:0,w:297,h:557,hg:'R'},S,'b',u);
  return `<svg viewBox="-30 -750 660 780" xmlns="http://www.w3.org/2000/svg">${svgInner(b.p.filter(q=>q.ly!=='HINGE'))}</svg>`;}
 function sideCab(){const st=[['modern','مدرن'],['neoclassic','نئوکلاسیک'],['classic','کلاسیک']];const it0=curRun2(),u0=it0&&selObj(it0);
- $('side').innerHTML=(u0?unitCard(it0,u0):'')+`<div class="card"><h3>سبک کلی</h3><div class="chips">${st.map(([v,t])=>`<button class="btn ${S.style===v?'on':''}" data-a="dstyle" data-k="${v}">${t}</button>`).join('')}</div>
+ $('side').innerHTML=(u0?unitCard(it0,u0):'')+`<div class="card"><h3>طرح از روی عکس</h3><p class="row"><button class="btn p" data-rf="design">📷 عکس طرح مرجع</button><button class="btn" data-rf="tex">🪵 متریال سفارشی از عکس</button>${CTEX?'<button class="btn d" data-rf="texdel">حذف متریال سفارشی</button>':''}</p>
+ <p class="hint">${SMP?'عکس آشپزخانه یا کابینت مورد نظر را بدهید: سبک، مدل درب، دستگیره، رنگ‌ها و صفحه از روی عکس انتخاب و روی کل طرح اعمال می‌شود، و عکس به‌عنوان مرجع زیر نمای اولین دیوار قرار می‌گیرد.':'عکس به‌عنوان مرجع زیر نما قرار می‌گیرد تا طرح را روی آن تنظیم کنید. (تشخیص خودکار سبک و رنگ از عکس فقط در نسخه داخل Claude فعال است.)'} «متریال سفارشی» عکس یک چوب، سنگ یا رنگ را به‌عنوان رنگ درب‌ها می‌گذارد (در سه‌بعدی با همان بافت).</p></div>`+`<div class="card"><h3>سبک کلی</h3><div class="chips">${st.map(([v,t])=>`<button class="btn ${S.style===v?'on':''}" data-a="dstyle" data-k="${v}">${t}</button>`).join('')}</div>
  <h3 style="margin-top:12px">مدل درب</h3>${DCAT.map(([c,ct])=>`<p class="hint" style="margin:8px 0 2px"><b>${ct}</b></p><div class="pv">${DOORS.filter(x=>x[3]===c).map(([k,t,id])=>`<button class="${S.door===k?'on':''}" data-a="door1" data-k="${k}">${pvSVG(k,S.handle)}${t}<small>${id}</small></button>`).join('')}</div>`).join('')}
  <h3 style="margin-top:12px">دستگیره</h3><div class="pv">${HANDLES.map(([k,t,id])=>`<button class="${S.handle===k?'on':''}" data-a="hdl1" data-k="${k}">${pvSVG(S.door,k)}${t}<small>${id}</small></button>`).join('')}</div>
- <h3 style="margin-top:12px">رنگ درب‌های زمینی</h3><div class="sws">${COLORS.map(([k,t,h])=>`<button class="sw ${S.colB===k?'on':''}" data-a="setf" data-f="colB" data-k="${k}" title="${t}" style="background:${h}"></button>`).join('')}</div>
- <h3>رنگ درب‌های هوایی</h3><div class="sws">${COLORS.map(([k,t,h])=>`<button class="sw ${S.colW===k?'on':''}" data-a="setf" data-f="colW" data-k="${k}" title="${t}" style="background:${h}"></button>`).join('')}</div>
+ <h3 style="margin-top:12px">رنگ همه کابینت‌ها (زمینی، هوایی، دکور)</h3><div class="sws">${COLORS.map(([k,t,h])=>`<button class="sw ${S.colB===k&&S.colW===k?'on':''}" data-a="setf" data-f="colAll" data-k="${k}" title="${t}" style="background:${h}"></button>`).join('')}</div>
+ <h3 style="margin-top:12px">فقط زمینی‌ها</h3><div class="sws">${COLORS.map(([k,t,h])=>`<button class="sw ${S.colB===k?'on':''}" data-a="setf" data-f="colB" data-k="${k}" title="${t}" style="background:${h}"></button>`).join('')}</div>
+ <h3>فقط هوایی‌ها</h3><div class="sws">${COLORS.map(([k,t,h])=>`<button class="sw ${S.colW===k?'on':''}" data-a="setf" data-f="colW" data-k="${k}" title="${t}" style="background:${h}"></button>`).join('')}</div>
  <div class="f"><label>متریال درب<select data-k="fin">${FINS.map(([k,t])=>`<option value="${k}"${S.fin===k?' selected':''}>${t}</option>`).join('')}</select></label>
  <label>صفحه کابینت<select data-k="top">${TOPS.map(([k,t])=>`<option value="${k}"${S.top===k?' selected':''}>${t}</option>`).join('')}</select></label>
  <label>رنگ دستگیره<select data-k="hfin">${HFIN.map(([k,t])=>`<option value="${k}"${S.hfin===k?' selected':''}>${t}</option>`).join('')}</select></label></div>
@@ -699,7 +711,7 @@ function etb(){const t=$('etb');if(TAB==='cab'){if(!vtb(t))t.innerHTML=`<b>ان�
   t.innerHTML=`<b>${w?'پنجره':'در'} · دیوار ${LET(SEL.e)}</b>${f('x','فاصله')}${f('w','عرض')}${w?f('sill','اوکابه'):''}${f('h','ارتفاع')}<button class="btn d" data-a="delo">🗑 حذف</button><button class="btn" data-a="close">✕</button>`;return;}}
  if(SEL.v!=null){t.innerHTML=`<b>گوشه ${SEL.v+1}</b><span class="hint">گوشه را بکشید</span><button class="btn" data-a="close">✕</button>`;return;}
  const i=SEL.e,E=S.edges[i];t.innerHTML=`<b>دیوار ${LET(i)}</b><input type="number" inputmode="numeric" data-k="eLen" value="${eg(S,i).len}">
- ${E.w?'<button class="btn d" data-a="wall">🗑 حذف دیوار (باز بماند)</button>':'<button class="btn p" data-a="wall">+ دیوار بگذار</button>'}<button class="btn" data-a="split">+ گوشه</button>${E.w?'<button class="btn" data-a="win">+ پنجره</button><button class="btn" data-a="door">+ در</button>':''}<button class="btn" data-a="close">✕</button>`;}
+ ${E.w?'<button class="btn d" data-a="wall">🗑 حذف دیوار (باز بماند)</button>':'<button class="btn p" data-a="wall">+ دیوار بگذار</button>'}<button class="btn" data-a="split">+ گوشه</button><button class="btn p" data-a="mep">📍 نقاط آب/گاز/برق</button>${E.w?'<button class="btn" data-a="win">+ پنجره</button><button class="btn" data-a="door">+ در</button>':''}<button class="btn" data-a="close">✕</button>`;}
 function side(){etb();if(TAB==='space')sideSpace();else if(TAB==='cab')sideCab();}
 // ---- geometry edits
 function preset(k,W,Dd){if(!['I','II','L','U'].includes(k))k='L';S.preset=k;S.man={};S.poly=[[0,0],[W,0],[W,-Dd],[0,-Dd]];const e=(w,cab)=>({w,cab,win:[],door:[]}),E=[e(1,0),e(1,0),e(1,0),e(1,0)],op=S.pOpen;
@@ -713,7 +725,7 @@ function preset(k,W,Dd){if(!['I','II','L','U'].includes(k))k='L';S.preset=k;S.ma
  S.isl.on=S.pIsl?1:0;
  if(S.pIsl){const l=E[3].cab?S.baseD+1100:300,r=W-(E[1].cab?S.baseD+1100:300),L=Math.max(1000,Math.min(2400,Math.floor((r-l)/50)*50));S.isl={on:1,L,D:1000,x:Math.round(l+(r-l-L)/2),y:-(S.baseD+1200)};}
  S.edges=E;SEL=null;fixSel();}
-function finishDraw(){const pts=DRAW.map(p=>p.slice());DRAW=null;S.preset='free';S.poly=pts;S.edges=pts.map(()=>({w:1,cab:0,win:[],door:[]}));
+function finishDraw(){const pts=DRAW.map(p=>p.slice());DRAW=null;S.pts=[];S.preset='free';S.poly=pts;S.edges=pts.map(()=>({w:1,cab:0,win:[],door:[]}));
  let li=0;pts.forEach((_,i)=>{if(eg(S,i).len>eg(S,li).len)li=i;});fixOrient(S);li=0;S.poly.forEach((_,i)=>{if(eg(S,i).len>eg(S,li).len)li=i;});
  S.edges[li].cab=1;const L=eg(S,li).len;S.isl.on=0;S.sink={e:li,x:L*0.4};S.hob={e:li,x:L-800};S.fr={e:li,x:375};SEL=null;fixSel();setVB();}
 function fixSel(){const n=S.poly.length;for(const k of['sink','hob','fr']){if(S[k].e>=n)S[k].e=0;S[k].x=Math.max(0,Math.min(eg(S,S[k].e).len,S[k].x));}}
@@ -722,7 +734,8 @@ function setLen(i,L){const g=eg(S,i),dl=L-g.len,n=S.poly.length,pe=dot(S.poly[(i
 function split(i){const n=S.poly.length,a=S.poly[i],b=S.poly[(i+1)%n],m=[(a[0]+b[0])/2,(a[1]+b[1])/2].map(Math.round),L=eg(S,i).len/2,E=S.edges[i];
  const E2={w:E.w,cab:E.cab,win:E.win.filter(w=>w.x>=L).map(w=>Object.assign({},w,{x:w.x-L})),door:E.door.filter(d=>d.x>=L).map(d=>Object.assign({},d,{x:d.x-L}))};
  E.win=E.win.filter(w=>w.x<L);E.door=E.door.filter(d=>d.x<L);S.poly.splice(i+1,0,m);S.edges.splice(i+1,0,E2);
- for(const k of['sink','hob','fr']){const M=S[k];if(M.e>i)M.e++;else if(M.e===i&&M.x>L){M.e=i+1;M.x-=L;}}}
+ for(const k of['sink','hob','fr']){const M=S[k];if(M.e>i)M.e++;else if(M.e===i&&M.x>L){M.e=i+1;M.x-=L;}}
+ for(const M of S.pts||[]){if(M.e>i)M.e++;else if(M.e===i&&M.x>L){M.e=i+1;M.x-=L;}}}
 function delV(v){const n=S.poly.length;if(n<=3)return;const prev=(v-1+n)%n;const Lp=eg(S,prev).len;S.poly.splice(v,1);S.edges.splice(v,1);
  for(const k of['sink','hob','fr']){const M=S[k];if(M.e===v){M.e=v>0?v-1:S.poly.length-1;M.x+=Lp;}else if(M.e>v)M.e--;}fixSel();}
 // ---- events
@@ -771,7 +784,8 @@ const sideClick=ev=>{const b=ev.target.closest('[data-a]');if(!b)return;const a=
   if(a==='pexp'){save((S.proj||'project')+'_project.json',JSON.stringify(S,null,1),'application/json');return;}}
  if(a==='dstyle'){const B={modern:['flat','gola'],neoclassic:['shaker','bar'],classic:['raised','knob']}[b.dataset.k];S.style=b.dataset.k;S.door=B[0];S.handle=B[1];clr(['ds','hd','cfg']);toast('همه کابینت‌ها '+b.textContent.trim()+' شد');}
  if(a==='door1'){S.door=b.dataset.k;clr(['ds']);}
- if(a==='setf'){S[b.dataset.f]=b.dataset.k;if(b.dataset.f==='colB')clr(['col'],u=>u.L!=='w');if(b.dataset.f==='colW')clr(['col'],u=>u.L==='w');}
+ if(a==='setf'&&b.dataset.f==='colAll'){S.colB=S.colW=b.dataset.k;clr(['col']);toast('رنگ همه کابینت‌ها عوض شد');}
+ else if(a==='setf'){S[b.dataset.f]=b.dataset.k;if(b.dataset.f==='colB')clr(['col'],u=>u.L!=='w');if(b.dataset.f==='colW')clr(['col'],u=>u.L==='w');}
  if(a==='hdl1'){S.handle=b.dataset.k;clr(['hd']);}
  if(a==='ptog'){S[b.dataset.k]=S[b.dataset.k]?0:1;const v=k=>+document.querySelector(`[data-k="${k}"]`).value;preset(S.preset,v('qW')||4000,v('qD')||3200);setVB();}
  if(a==='pre'){const v=k=>+document.querySelector(`[data-k="${k}"]`).value;preset(b.dataset.k,v('qW')||4000,v('qD')||3200);S.H=v('H')||S.H;setVB();}
@@ -781,8 +795,11 @@ const sideClick=ev=>{const b=ev.target.closest('[data-a]');if(!b)return;const a=
  if(a==='dfin'){finishDraw();}
  if(a==='snap')SNAP=!SNAP;
  if(a==='wall'&&E){E.w=E.w?0:1;if(!E.w)E.cab=0;}
- if(a==='win'&&E){const L=eg(S,SEL.e).len;E.win.push({x:Math.max(0,Math.round(L/2-500)),w:Math.min(1000,L-200),sill:1100,h:1200});}
- if(a==='door'&&E){const L=eg(S,SEL.e).len;E.door.push({x:Math.max(0,Math.round(L/2-450)),w:900,h:2100});}
+ if(a==='mep'){openMep(SEL&&SEL.e!=null?SEL.e:S.edges.findIndex(e=>e.w));return;}
+ if((a==='win'||a==='door')&&!E){toast('اول روی دیواری که پنجره/در می‌خواهد بزنید');return;}
+ if((a==='win'||a==='door')&&!E.w){toast('این ضلع دیوار ندارد؛ اول «+ دیوار بگذار» را بزنید');return;}
+ if(a==='win'&&E){const L=eg(S,SEL.e).len;E.win.push({x:Math.max(0,Math.round(L/2-500)),w:Math.min(1000,L-200),sill:1100,h:1200});SEL={e:SEL.e,o:{t:'win',i:E.win.length-1}};}
+ if(a==='door'&&E){const L=eg(S,SEL.e).len;E.door.push({x:Math.max(0,Math.round(L/2-450)),w:900,h:2100});SEL={e:SEL.e,o:{t:'door',i:E.door.length-1}};}
  if(a==='delo'&&SEL&&SEL.o){S.edges[SEL.e][SEL.o.t].splice(SEL.o.i,1);SEL={e:SEL.e};}
  if((a==='delw'||a==='deld')&&SEL)SEL={e:SEL.e};
  if(a==='delw'&&E)E.win.splice(+b.dataset.k,1);
@@ -861,7 +878,7 @@ function refresh(){if(TAB==='elv'){drawElvSVG();elvSide();}else{drawEditor();sid
 function pxU(sv,vb){return vb[2]/Math.max(1,sv.clientWidth);}
 function drawElvSVG(){const it=curRun();if(!it)return;const R=it.R,sh=elevSheet(R,S,CUR.D),b=sh.bb;
  if(!EV.vb){const m=250;EV.vb=fitAsp([b[0]-m,-(b[3]+m),b[2]-b[0]+2*m,b[3]-b[1]+2*m],$('vsvg'));}$('vsvg').setAttribute('viewBox',EV.vb.join(' '));
- const px=pxU($('vsvg'),EV.vb);let s=svgInner(sh.p);
+ const px=pxU($('vsvg'),EV.vb);let s=refSVG(it)+svgInner(sh.p);
  R.base.concat(R.wu).forEach(u=>{if(u.type==='void')return;const L=u.L==='w'?'w':'b',i=(L==='w'?R.wu:R.base).indexOf(u),on=EV.run===it.k&&EV.sel&&EV.sel.L===L&&EV.sel.i===i;
   s+=`<rect data-u="${L}|${i}" x="${u.x0}" y="${-(u.z+u.h)}" width="${u.x1-u.x0}" height="${u.h}" fill="${on?'#e08a2b':'#000'}" fill-opacity="${on?.18:0}" stroke="${on?'#e08a2b':'none'}" stroke-width="${px*2}" style="cursor:move"/>`;
   if(on){s+=`<text x="${(u.x0+u.x1)/2}" y="${-(u.z+u.h/2)}" font-size="${px*16}" text-anchor="middle" fill="#b85c00" font-weight="700" pointer-events="none">${Math.round(u.x1-u.x0)}</text>`;
@@ -874,7 +891,7 @@ function unitCard(it,u){const opts=u.L==='w'?WT:u.L==='t'?TT:BT,lst=opts.find(o=
   <label>مدل درب<select data-vk="ds"><option value="">طبق پیش‌فرض</option>${DOORS.map(([v,t])=>`<option value="${v}"${u.ds===v?' selected':''}>${t}</option>`).join('')}</select></label>
   <label>دستگیره<select data-vk="hd"><option value="">طبق پیش‌فرض</option>${HANDLES.map(([v,t])=>`<option value="${v}"${u.hd===v?' selected':''}>${t}</option>`).join('')}</select></label>
   <label>رنگ درب<select data-vk="col"><option value="">طبق پیش‌فرض</option>${COLORS.map(([v,t])=>`<option value="${v}"${u.col===v?' selected':''}>${t}</option>`).join('')}</select></label></div>
-  <p class="row" style="margin-top:8px"><button class="btn" data-va="all">همین مدل برای کل این دیوار</button></p></div>`;}
+  <p class="row" style="margin-top:8px"><button class="btn" data-va="all">برای کل این دیوار</button><button class="btn p" data-va="allk">برای کل آشپزخانه</button></p></div>`;}
 function vtb(el){const it=EV.run!=null&&CUR?elvList().find(x=>x.k===EV.run):null,u=it&&selObj(it),fab=$(el.id==='etb'?'efab':'vfab');fab.style.display=u?'':'none';if(!u){el.innerHTML='';return false;}const w=Math.round(u.x1-u.x0);
  el.innerHTML=`<b>${TL[u.type]} · ${w/10} سانت</b><button class="btn" data-va="w-">−5</button><button class="btn" data-va="w+">+5</button>${(u.L==='w'?[300,400,450,500,600,800,900]:[150,300,400,450,500,600,800,900]).map(x=>`<button class="btn ${x===w?'on':''}" data-va="ws" data-k="${x}">${x/10}</button>`).join('')}<button class="btn" data-va="left">◀</button><button class="btn" data-va="right">▶</button><button class="btn d" data-va="del">🗑</button><button class="btn" data-va="close">✕</button><div style="flex-basis:100%;display:flex;gap:4px;flex-wrap:wrap;border-top:1px dashed var(--line);padding-top:4px">${(u.L==='w'?WT:BT).filter(x=>x[0]!=='filler').map(([v,t])=>`<button class="btn ${u.type===v?'on':''}" data-va="ty" data-k="${v}">${t}</button>`).join('')}</div>`;return true;}
 function setW(it,o,w){setW0(it,o,w);const m=S.man[it.k];for(const q of m.base.concat(m.wu)){const x=q.x1-q.x0;if(['d1','d2','pull'].includes(q.type))q.type=x<=250?'pull':x>=700?'d2':'d1';if(['w1','w2'].includes(q.type))q.type=x>=700?'w2':'w1';}}
@@ -888,7 +905,7 @@ function setW0(it,o,w){const m=S.man[it.k],l=o.L==='w'?m.wu:m.base,i=l.indexOf(o
  if(d<0){o.x1+=d;return;}toast('جا برای بزرگ‌تر کردن نیست');}
 function elvSide(){vtb($('vtb'));const it=curRun();if(!it){$('vside').innerHTML='';return;}const u=selObj(it),man=S.man&&S.man[it.k];
  let h=`<div class="card"><h3>${it.t}</h3><p class="hint">با دو انگشت زوم کنید و با کشیدن جای خالی، نما را جابه‌جا کنید. روی کابینت بزنید؛ وسطش را بکشید تا جابه‌جا شود، و لبه‌های چپ/راستش (یا دستگیره نارنجی) را بکشید تا کوچک و بزرگ شود (سانت‌به‌سانت، روی عددهای رند می‌چسبد). برای عرض دقیق از دکمه‌های بالای نما استفاده کنید.</p>
- <p class="row"><button class="btn" data-va="fill">پر کردن فاصله‌های خالی</button>${man?'<button class="btn d" data-va="auto">بازگشت به طراحی خودکار</button>':''}</p></div>`;
+ <p class="row"><button class="btn" data-va="fill">پر کردن فاصله‌های خالی</button>${man?'<button class="btn d" data-va="auto">بازگشت به طراحی خودکار</button>':''}</p></div>`+refCard(it);
  if(u)h+=unitCard(it,u);$('vside').innerHTML=h+warnHTML();}
 function vworld(ev){const sv=$('vsvg'),pt=sv.createSVGPoint();pt.x=ev.clientX;pt.y=ev.clientY;const q=pt.matrixTransform(sv.getScreenCTM().inverse());return[q.x,-q.y];}
 const sn=x=>Math.round(x/10)*10;
@@ -967,6 +984,7 @@ const vClick=ev=>{const bt=ev.target.closest('[data-va]');if(!bt)return;const a=
  if(a==='w-'||a==='w+'){setW(it,o,o.x1-o.x0+(a==='w+'?50:-50));after(it,o);}
  if(a==='ws'){setW(it,o,+bt.dataset.k);after(it,o);}
  if(a==='ty'){setType(o,bt.dataset.k);after(it,o);return;}
+ if(a==='allk'){if(o.ds)S.door=o.ds;if(o.hd)S.handle=o.hd;if(o.col)S.colB=S.colW=o.col;clr(['ds','hd','col']);after(it,o);toast('روی همه کابینت‌های آشپزخانه اعمال شد');return;}
  if(a==='all'){for(const q of m.base.concat(m.wu)){for(const f of['ds','hd','col']){if(o[f])q[f]=o[f];else delete q[f];}}after(it,o);toast('برای کل نما اعمال شد');}};
 $('vside').addEventListener('click',vClick);$('vtb').addEventListener('click',vClick);$('etb').addEventListener('click',vClick);$('side').addEventListener('click',vClick);
 const vChange=ev=>{const k=ev.target.dataset.vk;if(!k)return;const it=TAB==='elv'?curRun():curRun2();if(!it)return;const m=ensureMan(it),o=selObj(it);if(!o)return;
@@ -994,27 +1012,131 @@ function book(){try{return JSON.parse(localStorage.getItem('kabPrices')||'{}');}
 $('t-cost').addEventListener('change',ev=>{const d=ev.target.dataset;if(d.pk){const v=+ev.target.value||0;curP(S)[d.pk]=v;const bk=book();(bk[S.cur]||(bk[S.cur]={}))[d.pk]=v;try{localStorage.setItem('kabPrices',JSON.stringify(bk));}catch(e){}}else if(d.ck){const k=d.ck;S[k]=typeof DEF[k]==='number'?Math.max(0,+ev.target.value||0):ev.target.value.trim();if((k==='sheetL'||k==='sheetW')&&S[k]<300)S[k]=DEF[k];if(k==='waste')S.waste=Math.min(60,S.waste);}else return;store();compute();drawCost();});
 const THREE_URL='three.min.js';let T3=null;
 function load3(cb){if(window.THREE)return cb();const s=document.createElement('script');s.src=THREE_URL;s.onload=cb;s.onerror=()=>{$('v3msg').textContent='کتابخانه سه‌بعدی بارگذاری نشد.';};document.head.appendChild(s);}
+const V3S={mode:'orbit',wall:null,ceil:1,fc:1,L:{center:1,down:1,cove:1,under:1,day:1},anim:0};
+function v3bar(){const c=CUR&&CUR.D;if(!c)return;const ws=S.poly.map((_,i)=>i).filter(i=>S.edges[i].w),on=(k)=>V3S.L[k]?'on':'';
+ $('v3bar').innerHTML=`<div class="chips"><b style="align-self:center;font-size:12px">نما:</b><button class="btn ${V3S.mode==='orbit'?'on':''}" data-v3="orbit">همه</button>${ws.map(i=>`<button class="btn ${V3S.mode==='wall'&&V3S.wall===i?'on':''}" data-v3="wall" data-k="${i}">دیوار ${LET(i)}</button>`).join('')}<button class="btn ${V3S.mode==='walk'?'on':''}" data-v3="walk">🚶 قدم زدن</button></div>
+ <div class="chips" style="margin-top:6px"><button class="btn ${V3S.ceil?'on':''}" data-v3t="ceil">سقف</button><button class="btn ${V3S.fc?'on':''}" data-v3t="fc">سقف کاذب</button><button class="btn" data-v3="close">بستن همه درب‌ها</button></div>
+ <div class="chips" style="margin-top:6px"><b style="align-self:center;font-size:12px">نور:</b><button class="btn ${on('center')}" data-v3l="center">💡 وسط</button><button class="btn ${on('down')}" data-v3l="down">هالوژن</button><button class="btn ${on('cove')}" data-v3l="cove">نور مخفی</button><button class="btn ${on('under')}" data-v3l="under">زیر کابینت</button><button class="btn ${on('day')}" data-v3l="day">☀️ روز</button></div>`;}
+document.addEventListener('click',ev=>{const b=ev.target.closest('[data-v3],[data-v3t],[data-v3l]');if(!b||!T3||!T3.sc)return;const d=b.dataset;
+ if(d.v3l){V3S.L[d.v3l]=V3S.L[d.v3l]?0:1;T3.applyLights();}
+ else if(d.v3t){V3S[d.v3t]=V3S[d.v3t]?0:1;T3.applyLights();}
+ else if(d.v3==='close'){for(const g of T3.acts)g.userData.t=0;}
+ else{V3S.mode=d.v3;V3S.wall=d.k!=null?+d.k:null;T3.setView();}
+ v3bar();});
+function srgb(TH,h){return new TH.Color(h).convertSRGBToLinear();}
+function ctex(TH,draw,rep){const c=document.createElement('canvas');c.width=c.height=512;draw(c.getContext('2d'),512);const t=new TH.CanvasTexture(c);t.wrapS=t.wrapT=TH.RepeatWrapping;t.encoding=TH.sRGBEncoding;t.anisotropy=4;t.repeat.set(rep,rep);return t;}
+function boxUV(TH,g){const p=g.attributes.position,n=g.attributes.normal,uv=new Float32Array(p.count*2);for(let i=0;i<p.count;i++){const ax=Math.abs(n.getX(i)),ay=Math.abs(n.getY(i)),az=Math.abs(n.getZ(i));let u,v;if(ay>=ax&&ay>=az){u=p.getX(i);v=p.getZ(i);}else if(ax>=az){u=p.getZ(i);v=p.getY(i);}else{u=p.getX(i);v=p.getY(i);}uv[2*i]=u;uv[2*i+1]=v;}g.setAttribute('uv',new TH.BufferAttribute(uv,2));}
 function draw3(){load3(()=>{const el=$('v3c'),c=full();if(!c)return;const TH=window.THREE;
  if(!T3){let r;try{r=new TH.WebGLRenderer({antialias:true});}catch(e){$('v3msg').textContent='این دستگاه نمایش سه‌بعدی (WebGL) را پشتیبانی نمی‌کند.';return;}
-  r.setPixelRatio(Math.min(2,window.devicePixelRatio||1));el.appendChild(r.domElement);r.domElement.style.touchAction='none';T3={r,th:-0.7,ph:0.45,d:0,pts:new Map()};
-  const cv=r.domElement;let p0=null;
-  cv.addEventListener('pointerdown',e=>{T3.pts.set(e.pointerId,[e.clientX,e.clientY]);try{cv.setPointerCapture(e.pointerId);}catch(_){}if(T3.pts.size===2){const[a,b]=[...T3.pts.values()];p0={d:Math.hypot(a[0]-b[0],a[1]-b[1]),D:T3.d};}});
-  cv.addEventListener('pointermove',e=>{const o=T3.pts.get(e.pointerId);if(!o)return;if(T3.pts.size===1){T3.th-=(e.clientX-o[0])*0.008;T3.ph=Math.max(0.05,Math.min(1.5,T3.ph+(e.clientY-o[1])*0.006));}T3.pts.set(e.pointerId,[e.clientX,e.clientY]);
-   if(T3.pts.size===2&&p0){const[a,b]=[...T3.pts.values()];T3.d=Math.max(1,Math.min(40,p0.D*p0.d/Math.max(10,Math.hypot(a[0]-b[0],a[1]-b[1]))));}T3.draw();});
-  const up=e=>{T3.pts.delete(e.pointerId);p0=null;};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
-  cv.addEventListener('wheel',e=>{e.preventDefault();T3.d=Math.max(1,Math.min(40,T3.d*(e.deltaY>0?1.12:0.89)));T3.draw();},{passive:false});
-  addEventListener('resize',()=>{if(TAB==='v3')draw3();});}
- const r=T3.r,sc=new TH.Scene();sc.background=new TH.Color(0xf4f2ee);(T3.geos||[]).forEach(g=>g.dispose());T3.geos=[];
- const G={},res=to3D(S,c.D,'x',(pts,faces,m,o)=>{const wl=/^(WALL|WINDOW)_([A-Z])/.exec(o),key=(wl?wl[2]:'')+'|'+m,a=G[key]||(G[key]=[]);for(const f of faces)for(let i=1;i<f.length-1;i++)for(const k of[f[0],f[i],f[i+1]])a.push(pts[k][0]/1000,pts[k][1]/1000,pts[k][2]/1000);});
- const walls=[];for(const key in G){const[wl,m]=key.split('|'),g=new TH.BufferGeometry();g.setAttribute('position',new TH.Float32BufferAttribute(G[key],3));g.computeVertexNormals();T3.geos.push(g);
-  const me=new TH.Mesh(g,new TH.MeshLambertMaterial({color:new TH.Color(res.mats[m]||'#ccc'),transparent:m==='Glass',opacity:m==='Glass'?0.35:1,side:TH.DoubleSide}));sc.add(me);
-  if(wl){const i=wl.charCodeAt(0)-65,gg=eg(S,i),mid=P(S,i,gg.len/2,0);walls.push({me,mid:[mid[0]/1000,-mid[1]/1000],n:[gg.n[0],-gg.n[1]]});}}
- sc.add(new TH.HemisphereLight(0xffffff,0x9a9a9a,0.8));const dl=new TH.DirectionalLight(0xffffff,0.55);sc.add(dl);
- let a=[1e9,1e9,-1e9,-1e9];for(const p of S.poly){a[0]=Math.min(a[0],p[0]);a[1]=Math.min(a[1],p[1]);a[2]=Math.max(a[2],p[0]);a[3]=Math.max(a[3],p[1]);}
- const tg=[(a[0]+a[2])/2000,1.1,-(a[1]+a[3])/2000],sz=Math.max(a[2]-a[0],a[3]-a[1])/1000;if(!T3.d){T3.d=sz*1.5+2;let nx=0,nz=0;for(const R of c.D.runs){const g=eg(S,R.wall);nx+=g.n[0]*g.len;nz+=-g.n[1]*g.len;}if(nx||nz)T3.th=Math.atan2(nx,nz);}
- const w=el.clientWidth,h=el.clientHeight;r.setSize(w,h);const cam=new TH.PerspectiveCamera(45,w/h,0.05,200);
- T3.draw=()=>{const cp=Math.cos(T3.ph),x=tg[0]+T3.d*cp*Math.sin(T3.th),y=tg[1]+T3.d*Math.sin(T3.ph),z=tg[2]+T3.d*cp*Math.cos(T3.th);cam.position.set(x,y,z);cam.lookAt(tg[0],tg[1],tg[2]);dl.position.set(x+1,y+3,z+1);
-  for(const W of walls)W.me.visible=(x-W.mid[0])*W.n[0]+(z-W.mid[1])*W.n[1]>0;r.render(sc,cam);};T3.draw();});}
+  r.setPixelRatio(Math.min(2,window.devicePixelRatio||1));r.outputEncoding=TH.sRGBEncoding;r.toneMapping=TH.ACESFilmicToneMapping;r.toneMappingExposure=0.95;r.shadowMap.enabled=true;r.shadowMap.type=TH.PCFSoftShadowMap;
+  el.insertBefore(r.domElement,el.firstChild);r.domElement.style.touchAction='none';r.domElement.style.display='block';T3={r,th:-0.7,ph:0.45,d:0,pts:new Map(),yaw:0,pitch:-0.1,pos:null,joy:[0,0],keys:{}};
+  const cv=r.domElement;let p0=null,down=null;
+  cv.addEventListener('pointerdown',e=>{T3.pts.set(e.pointerId,[e.clientX,e.clientY]);try{cv.setPointerCapture(e.pointerId);}catch(_){}down=T3.pts.size===1?{x:e.clientX,y:e.clientY,m:0}:null;if(T3.pts.size===2){const[a,b]=[...T3.pts.values()];p0={d:Math.hypot(a[0]-b[0],a[1]-b[1]),D:T3.d};}});
+  cv.addEventListener('pointermove',e=>{const o=T3.pts.get(e.pointerId);if(!o)return;const dx=e.clientX-o[0],dy=e.clientY-o[1];if(down&&Math.abs(e.clientX-down.x)+Math.abs(e.clientY-down.y)>8)down.m=1;
+   if(T3.pts.size===1){if(V3S.mode==='walk'){T3.yaw+=dx*0.005;T3.pitch=Math.max(-1.2,Math.min(1.2,T3.pitch-dy*0.004));}else{T3.th-=dx*0.008;T3.ph=Math.max(0.03,Math.min(1.5,T3.ph+dy*0.006));}}
+   T3.pts.set(e.pointerId,[e.clientX,e.clientY]);
+   if(T3.pts.size===2&&p0&&V3S.mode!=='walk'){const[a,b]=[...T3.pts.values()];T3.d=Math.max(0.5,Math.min(40,p0.D*p0.d/Math.max(10,Math.hypot(a[0]-b[0],a[1]-b[1]))));}});
+  const up=e=>{const was=T3.pts.size;T3.pts.delete(e.pointerId);p0=null;if(e.type==='pointerup'&&was===1&&down&&!down.m)T3.tap(e.clientX,e.clientY);down=null;};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+  cv.addEventListener('wheel',e=>{e.preventDefault();if(V3S.mode==='walk')return;T3.d=Math.max(0.5,Math.min(40,T3.d*(e.deltaY>0?1.12:0.89)));},{passive:false});
+  addEventListener('keydown',e=>{if(TAB==='v3')T3.keys[e.key.toLowerCase()]=1;});addEventListener('keyup',e=>{T3.keys[e.key.toLowerCase()]=0;});
+  const jy=$('joy'),kn=jy.firstElementChild;let jid=null;
+  jy.addEventListener('pointerdown',e=>{e.stopPropagation();jid=e.pointerId;try{jy.setPointerCapture(jid);}catch(_){}});
+  jy.addEventListener('pointermove',e=>{if(e.pointerId!==jid)return;const r=jy.getBoundingClientRect(),x=(e.clientX-r.left-r.width/2)/(r.width/2),y=(e.clientY-r.top-r.height/2)/(r.height/2),l=Math.max(1,Math.hypot(x,y));T3.joy=[x/l,y/l];kn.style.transform=`translate(${T3.joy[0]*35}px,${T3.joy[1]*35}px)`;});
+  const jend=e=>{if(e.pointerId!==jid)return;jid=null;T3.joy=[0,0];kn.style.transform='';};jy.addEventListener('pointerup',jend);jy.addEventListener('pointercancel',jend);
+  addEventListener('resize',()=>{if(TAB==='v3'&&T3.cam){const w=el.clientWidth,h=el.clientHeight;T3.r.setSize(w,h);T3.cam.aspect=w/h;T3.cam.updateProjectionMatrix();}});}
+ const r=T3.r;if(T3.sc)T3.sc.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{if(m.map)m.map.dispose();m.dispose();});}});
+ const sc=new TH.Scene();sc.background=srgb(TH,'#e9e6e1');T3.sc=sc;T3.acts=[];const D=c.D,G3=D.G,H=S.H/1000,mm=x=>x/1000;
+ const V=(i,s,n,z)=>{const p=P(S,i,s,n);return new TH.Vector3(p[0]/1000,z/1000,-p[1]/1000);},dirs=i=>{const g=eg(S,i);return{d:new TH.Vector3(g.d[0],0,-g.d[1]),n:new TH.Vector3(g.n[0],0,-g.n[1]),g};};
+ const floorT=ctex(TH,(g,N)=>{g.fillStyle='#d8d2c6';g.fillRect(0,0,N,N);for(let i=0;i<2600;i++){g.fillStyle=`rgba(${120+Math.random()*60|0},${110+Math.random()*50|0},${100+Math.random()*40|0},.05)`;g.fillRect(Math.random()*N,Math.random()*N,3,3);}g.strokeStyle='#a9a196';g.lineWidth=5;g.strokeRect(0,0,N,N);},1/0.6);
+ const marT=ctex(TH,(g,N)=>{g.fillStyle=S.top==='granite'?'#2c2c2c':'#efede9';g.fillRect(0,0,N,N);g.strokeStyle=S.top==='granite'?'rgba(255,255,255,.25)':'rgba(120,120,125,.35)';for(let k=0;k<9;k++){g.lineWidth=0.5+Math.random()*2;g.beginPath();let x=Math.random()*N,y=0;g.moveTo(x,y);while(y<N){x+=(Math.random()-.5)*40;y+=20+Math.random()*30;g.lineTo(x,y);}g.stroke();}},1/1.2);
+ const TX=customTex(TH);const mc={};
+ const mat=(m,hex)=>{if(mc[m])return mc[m];let o={color:srgb(TH,hex||'#cccccc'),roughness:.6,metalness:0};
+  if(m==='Glass')o={color:srgb(TH,'#d6e8ee'),roughness:.05,metalness:0,transparent:true,opacity:.28,depthWrite:false};
+  else if(m==='Steel')Object.assign(o,{roughness:.32,metalness:.85});else if(m==='Handle'||m==='Aluminium')Object.assign(o,{roughness:.25,metalness:.9});
+  else if(m==='Black')o.roughness=.25;else if(m==='Wall')o.roughness=.92;
+  else if(m==='Floor')Object.assign(o,{map:floorT,color:srgb(TH,'#ffffff'),roughness:.35});
+  else if(m==='Worktop'){o.roughness=S.top==='concrete'?.8:S.top==='wood'?.55:.18;if(['marble','quartz','granite'].includes(S.top)){o.map=marT;o.color=srgb(TH,'#ffffff');}}
+  else if(m.startsWith('Front_')){o.roughness=S.fin==='gloss'?.1:S.fin==='memb'?.35:S.fin==='veneer'?.55:.6;if(m==='Front_custom'&&TX){o.map=TX;o.color=srgb(TH,'#ffffff');}}
+  return mc[m]=new TH.MeshStandardMaterial(o);};
+ // collect geometry per object
+ const objs={},res=to3D(S,D,'x',(pts,faces,m,o)=>{const base=o.replace(/_handle$/,''),ob=objs[base]||(objs[base]={}),a=ob[m]||(ob[m]=[]);for(const f of faces)for(let i=1;i<f.length-1;i++)for(const k of[f[0],f[i],f[i+1]])a.push(pts[k][0]/1000,pts[k][1]/1000,pts[k][2]/1000);});
+ const walls=[];T3.walls=walls;
+ const mk=(arr,m,piv)=>{const g=new TH.BufferGeometry();g.setAttribute('position',new TH.Float32BufferAttribute(arr,3));if(piv)g.translate(-piv.x,-piv.y,-piv.z);g.computeVertexNormals();if(m==='Floor'||m==='Worktop'||m==='Front_custom')boxUV(TH,g);const me=new TH.Mesh(g,mat(m,res.mats[m]));me.castShadow=m!=='Glass'&&m!=='Floor';me.receiveShadow=true;return me;};
+ for(const name in objs){const ob=objs[name],fm=/^([A-Z]\d\d)_(door|drw|flap|app)_(\d+)$/.exec(name),hm=/^([A-Z]\d\d)_hob$/.exec(name),tm=/^([A-Z]\d\d)_tap$/.exec(name);
+  let u=null,f=null,w=null;if(fm||hm||tm){u=D.all.find(q=>q.code===(fm||hm||tm)[1]);if(u){w=u.run==='ISL'?'ISL':u.run.charCodeAt(0)-65;if(fm)f=u.fr[+fm[3]-1];}}
+  if(fm&&u&&f&&(f.k!=='app'||f.panel)){const dd=u.L==='w'?S.wallD:S.baseD,{d,n}=dirs(w),Y=new TH.Vector3(0,1,0);let piv,act;
+   if(f.k==='drw'){piv=V(w,f.x,dd,f.z);act={kind:'slide',dir:n.clone().multiplyScalar(mm(dd-110))};}
+   else if(f.k==='flap'){piv=V(w,f.x,dd,f.z+f.h);act={kind:'rot',axis:Y.clone().negate().cross(n).normalize(),ang:1.35};}
+   else if(f.panel){piv=V(w,f.x,dd,f.z);act={kind:'rot',axis:Y.clone().cross(n).normalize(),ang:1.4};}
+   else if(f.hg==='R'){piv=V(w,f.x+f.w,dd,f.z);act={kind:'rot',axis:d.clone().negate().cross(n).normalize(),ang:1.75};}
+   else{piv=V(w,f.x,dd,f.z);act={kind:'rot',axis:d.clone().cross(n).normalize(),ang:1.75};}
+   const grp=new TH.Group();grp.position.copy(piv);for(const m in ob)grp.add(mk(ob[m],m,piv));grp.userData=Object.assign(act,{p:0,t:0,base:piv.clone()});sc.add(grp);T3.acts.push(grp);continue;}
+  const grp=new TH.Group();for(const m in ob)grp.add(mk(ob[m],m));sc.add(grp);
+  const wl=/^(WALL|WINDOW)_([A-Z])/.exec(name);if(wl){const i=wl[2].charCodeAt(0)-65,{n,g}=dirs(i),mid=V(i,g.len/2,0,0);walls.push({o:grp,mid,n});}
+  if(hm&&u){const cx=(u.x0+u.x1)/2,hw=Math.min(S.hobW,u.w)-60,zt=S.counterH+30,fl=new TH.Group();fl.visible=false;
+   const fmB=new TH.MeshBasicMaterial({color:0x3d7bff,transparent:true,opacity:.8,blending:TH.AdditiveBlending,depthWrite:false});
+   for(const[ds,dn,rr]of[[-hw/4,190,45],[hw/4,190,60],[-hw/4,420,60],[hw/4,420,45]]){const cn=new TH.Mesh(new TH.ConeGeometry(mm(rr*0.75),0.035,18,1,true),fmB);cn.position.copy(V(w,cx+ds,dn,zt+15));fl.add(cn);}
+   const pl=new TH.PointLight(0x6f9bff,0.6,1.2);pl.position.copy(V(w,cx,300,zt+120));fl.add(pl);sc.add(fl);grp.userData={kind:'hob',on:0,fl};T3.acts.push(grp);}
+  if(tm&&u){const cx=(u.x0+u.x1)/2,zb=S.counterH-190,wtr=new TH.Mesh(new TH.CylinderGeometry(0.004,0.006,mm(S.counterH+255-zb),8,1,true),new TH.MeshStandardMaterial({color:0xcfe8ff,transparent:true,opacity:.55,roughness:.05}));
+   wtr.position.copy(V(w,cx,232,(S.counterH+255+zb)/2));wtr.visible=false;sc.add(wtr);grp.userData={kind:'tap',on:0,wtr};T3.acts.push(grp);}}
+ // room bounds
+ let bx=[1e9,1e9,-1e9,-1e9];for(const p of S.poly){bx[0]=Math.min(bx[0],p[0]);bx[1]=Math.min(bx[1],p[1]);bx[2]=Math.max(bx[2],p[0]);bx[3]=Math.max(bx[3],p[1]);}
+ const ctr=new TH.Vector3((bx[0]+bx[2])/2000,0,-(bx[1]+bx[3])/2000),sz=Math.max(bx[2]-bx[0],bx[3]-bx[1])/1000;T3.ctr=ctr;T3.sz=sz;
+ // ceiling + false ceiling
+ const shp=new TH.Shape(S.poly.map(p=>new TH.Vector2(p[0]/1000,p[1]/1000))),cg=new TH.ShapeGeometry(shp);cg.rotateX(-Math.PI/2);cg.translate(0,H,0);
+ const ceil=new TH.Mesh(cg,new TH.MeshStandardMaterial({color:srgb(TH,'#f7f5f1'),roughness:.95,side:TH.DoubleSide}));ceil.receiveShadow=true;sc.add(ceil);
+ const fcG=new TH.Group(),warm=0xffe2b8,emOn=()=>new TH.MeshBasicMaterial({color:warm}),fcM=new TH.MeshStandardMaterial({color:srgb(TH,'#f4f2ee'),roughness:.9}),coveM=emOn(),dlM=emOn(),ulM=emOn();
+ const box=(i,s0,s1,n0,n1,z0,z1,m,parent)=>{const c8=[];for(const z of[z0,z1])for(const[s,n]of[[s0,n0],[s1,n0],[s1,n1],[s0,n1]])c8.push(V(i,s,n,z));const g=new TH.BufferGeometry().setFromPoints([0,1,2,0,2,3,4,6,5,4,7,6,0,4,5,0,5,1,1,5,6,1,6,2,2,6,7,2,7,3,3,7,4,3,4,0].map(k=>c8[k]));g.computeVertexNormals();const me=new TH.Mesh(g,m);me.material.side=TH.DoubleSide;me.castShadow=me.receiveShadow=true;(parent||sc).add(me);return me;};
+ const FCW=550,FCD=260,HM=S.H;
+ S.poly.forEach((_,i)=>{if(!S.edges[i].w)return;const L=eg(S,i).len;box(i,0,L,0,FCW,HM-FCD,HM,fcM,fcG);box(i,FCW*0.0+0,L,FCW,FCW+12,HM-FCD+20,HM-FCD+45,coveM,fcG);});
+ sc.add(fcG);T3.fc=fcG;T3.ceil=ceil;
+ // lights
+ if(!T3.env){const pm=new TH.PMREMGenerator(r),es=new TH.Scene();es.add(new TH.Mesh(new TH.BoxGeometry(20,8,20),new TH.MeshBasicMaterial({color:0x8f8a83,side:TH.BackSide})));
+  for(const[px,py,pz,rx,ry,sw,shh,c]of[[0,3.9,0,Math.PI/2,0,8,8,0xffffff],[9.9,1.5,0,0,-Math.PI/2,6,3,0xfff3e0],[-9.9,1.5,0,0,Math.PI/2,6,3,0xe8f0ff]]){const m=new TH.Mesh(new TH.PlaneGeometry(sw,shh),new TH.MeshBasicMaterial({color:c,side:TH.DoubleSide}));m.position.set(px,py,pz);m.rotation.set(rx,ry,0);es.add(m);}
+  T3.env=pm.fromScene(es,0.04).texture;pm.dispose();}
+ sc.environment=T3.env;
+ const LT={};T3.LT=LT;const hemi=new TH.HemisphereLight(0xffffff,0x8c8478,0.15);sc.add(hemi);
+ const dayHemi=new TH.HemisphereLight(0xdfeeff,0xb9ad9c,0.3);sc.add(dayHemi);
+ const sun=new TH.DirectionalLight(0xfff6e8,1.1);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);const sh=sun.shadow.camera;sh.left=sh.bottom=-sz;sh.right=sh.top=sz;sh.near=0.5;sh.far=30;sun.shadow.bias=-0.0006;
+ let wi=S.edges.findIndex(e=>e.w&&e.win.length);if(wi<0)wi=0;{const {n,g}=dirs(wi),wn=S.edges[wi].win[0],sx=wn?wn.x+wn.w/2:g.len/2,c0=V(wi,sx,0,1400);sun.position.copy(c0.clone().addScaledVector(n,-4).add(new TH.Vector3(0,2.5,0)));sun.target.position.copy(c0.clone().addScaledVector(n,2.2).setY(0));sc.add(sun.target);}sc.add(sun);LT.day=[dayHemi,sun];
+ const ctrL=new TH.SpotLight(warm,1.0,9,1.25,.7,1.2);ctrL.position.set(ctr.x,H-0.05,ctr.z);ctrL.target.position.set(ctr.x,0,ctr.z);ctrL.castShadow=true;ctrL.shadow.mapSize.set(1024,1024);ctrL.shadow.bias=-0.0008;sc.add(ctrL,ctrL.target);
+ const pend=new TH.Mesh(new TH.CylinderGeometry(0.22,0.22,0.03,32),emOn());pend.position.set(ctr.x,H-0.02,ctr.z);sc.add(pend);LT.center=[ctrL,pend];
+ const coveL=new TH.PointLight(warm,0.45,10,1);coveL.position.set(ctr.x,H-0.15,ctr.z);sc.add(coveL);LT.cove=[coveL,coveM];
+ const dls=[],dlL=[];for(const R of D.runs){const g=eg(S,R.wall),k=Math.max(1,Math.round(g.len/1200));for(let j=0;j<k;j++)dls.push([R.wall,g.len*(j+.5)/k]);}
+ for(const[i,s]of dls){const m=new TH.Mesh(new TH.CylinderGeometry(0.04,0.04,0.012,18),dlM);m.position.copy(V(i,s,350,0)).setY(H-FCD/1000-0.005);sc.add(m);dlL.push(m);}
+ const pick=dls.filter((_,k)=>k%Math.max(1,Math.ceil(dls.length/4))===0).slice(0,4);for(const[i,s]of pick){const sp=new TH.SpotLight(warm,0.7,5,0.65,.6,1.3),p=V(i,s,350,0);sp.position.copy(p).setY(H-FCD/1000-0.02);sp.target.position.copy(p).setY(0);sc.add(sp,sp.target);dlL.push(sp);}LT.down=dlL;
+ const ul=[];for(const R of D.runs){const wus=R.wu.filter(u=>u.type!=='void'&&u.type!=='filler');if(!wus.length)continue;for(const u of wus)if(u.type!=='hood'){const m=box(R.wall,u.x0+20,u.x1-20,S.wallD-60,S.wallD-45,G3.wb-6,G3.wb-1,ulM);ul.push(m);}
+  const s=(wus[0].x0+wus[wus.length-1].x1)/2,len=wus[wus.length-1].x1-wus[0].x0,k=len>2400?2:1;for(let j=0;j<k;j++){const ss=wus[0].x0+len*(j+.5)/k,sp=new TH.SpotLight(warm,0.8,2,1.35,.9,1.5),p=V(R.wall,ss,S.wallD-60,G3.wb-20);sp.position.copy(p);sp.target.position.copy(V(R.wall,ss,S.wallD-60,0));sc.add(sp,sp.target);ul.push(sp);}}
+ LT.under=ul;
+ T3.applyLights=()=>{const fcOn=V3S.fc&&V3S.ceil;fcG.visible=fcOn;for(const k in LT){const on=!!V3S.L[k]&&(k!=='cove'||fcOn);for(const o of LT[k]){if(o.isLight)o.visible=on;else if(o.material)o.material.color.setHex(on?warm:0x8a8a8a);else if(o.color)o.color.setHex(on?warm:0x8a8a8a);}}
+  coveM.color.setHex(V3S.L.cove&&fcOn?warm:0xbdbdbd);for(const m of LT.down)if(m.isMesh)m.position.y=(fcOn?H-FCD/1000:H)-0.005;for(const m of LT.down)if(m.isSpotLight)m.position.y=(fcOn?H-FCD/1000:H)-0.02;
+  sc.background=srgb(TH,V3S.L.day?'#e9e6e1':'#1d1f24');hemi.intensity=V3S.L.day?0.15:0.06;const ei=V3S.L.day?0.75:0.18+0.12*((V3S.L.center?1:0)+(V3S.L.down?1:0)+(V3S.L.under?1:0));for(const k in mc)mc[k].envMapIntensity=ei;};
+ T3.applyLights();
+ // camera
+ const w=el.clientWidth,h=el.clientHeight;r.setSize(w,h);const cam=new TH.PerspectiveCamera(50,w/h,0.03,200);T3.cam=cam;T3.tg=new TH.Vector3(ctr.x,1.1,ctr.z);
+ if(!T3.d){T3.d=sz*1.5+2;let nx=0,nz=0;for(const R of D.runs){const g=eg(S,R.wall);nx+=g.n[0]*g.len;nz+=-g.n[1]*g.len;}if(nx||nz)T3.th=Math.atan2(nx,nz);}
+ const inside=(x,z)=>{const px=x*1000,py=-z*1000;let ins=false;const p=S.poly;for(let i=0,j=p.length-1;i<p.length;j=i++){if(((p[i][1]>py)!==(p[j][1]>py))&&(px<(p[j][0]-p[i][0])*(py-p[i][1])/(p[j][1]-p[i][1])+p[i][0]))ins=!ins;}return ins;};
+ T3.setView=()=>{$('joy').style.display=V3S.mode==='walk'?'block':'none';
+  if(V3S.mode==='wall'&&V3S.wall!=null){const {n,g}=dirs(V3S.wall),mid=V(V3S.wall,g.len/2,0,1300);T3.tg=mid;T3.th=Math.atan2(n.x,n.z);T3.ph=0.06;T3.d=Math.max(2.2,g.len/1000*1.05);}
+  else if(V3S.mode==='walk'){if(!T3.pos||!inside(T3.pos.x,T3.pos.z))T3.pos=new TH.Vector3(ctr.x,1.6,ctr.z);if(D.runs.length){const {n}=dirs(D.runs[0].wall);T3.yaw=Math.atan2(-n.x,-n.z);}T3.pitch=-0.15;}
+  else{T3.tg=new TH.Vector3(ctr.x,1.1,ctr.z);T3.d=sz*1.5+2;let nx=0,nz=0;for(const R of D.runs){const g=eg(S,R.wall);nx+=g.n[0]*g.len;nz+=-g.n[1]*g.len;}if(nx||nz)T3.th=Math.atan2(nx,nz);T3.ph=0.45;}};
+ T3.setView();
+ const ray=new TH.Raycaster();T3.tap=(x,y)=>{const rc=r.domElement.getBoundingClientRect();ray.setFromCamera(new TH.Vector2((x-rc.left)/rc.width*2-1,-(y-rc.top)/rc.height*2+1),cam);
+  const vis=o=>{for(;o;o=o.parent)if(!o.visible)return false;return true;};const hh=ray.intersectObjects(sc.children,true).find(h=>vis(h.object)&&h.object.material&&!h.object.material.isMeshBasicMaterial);if(!hh)return;
+  let o=hh.object;while(o&&!(o.userData&&o.userData.kind))o=o.parent;if(!o)return;const u=o.userData;
+  if(u.kind==='hob'){u.on=!u.on;u.fl.visible=!!u.on;toast(u.on?'گاز روشن شد':'گاز خاموش شد');}else if(u.kind==='tap'){u.on=!u.on;u.wtr.visible=!!u.on;}else u.t=u.t?0:1;};
+ let last=performance.now();
+ const loop=t=>{if(TAB!=='v3'||!T3||T3.sc!==sc){T3.raf=0;return;}const dt=Math.min(0.05,(t-last)/1000);last=t;
+  for(const g of T3.acts){const u=g.userData;if(u.kind!=='rot'&&u.kind!=='slide')continue;if(Math.abs(u.t-u.p)>1e-3){u.p+=(u.t-u.p)*Math.min(1,dt*7);if(u.kind==='rot')g.quaternion.setFromAxisAngle(u.axis,u.ang*u.p);else g.position.copy(u.base).addScaledVector(u.dir,u.p);}}
+  if(V3S.mode==='walk'){const K=T3.keys,f=new TH.Vector3(Math.sin(T3.yaw),0,Math.cos(T3.yaw)),rt=new TH.Vector3(-f.z,0,f.x);let mvF=-T3.joy[1]+(K.w||K.arrowup?1:0)-(K.s||K.arrowdown?1:0),mvR=-T3.joy[0]+(K.a||K.arrowleft?1:0)-(K.d||K.arrowright?1:0);
+   if(mvF||mvR){const np=T3.pos.clone().addScaledVector(f,mvF*1.3*dt).addScaledVector(rt,mvR*1.3*dt);if(inside(np.x,np.z))T3.pos.copy(np);}
+   cam.position.copy(T3.pos);cam.lookAt(T3.pos.x+Math.sin(T3.yaw)*Math.cos(T3.pitch),T3.pos.y+Math.sin(T3.pitch),T3.pos.z+Math.cos(T3.yaw)*Math.cos(T3.pitch));for(const W of walls)W.o.visible=true;}
+  else{const cp=Math.cos(T3.ph);cam.position.set(T3.tg.x+T3.d*cp*Math.sin(T3.th),T3.tg.y+T3.d*Math.sin(T3.ph),T3.tg.z+T3.d*cp*Math.cos(T3.th));cam.lookAt(T3.tg);
+   for(const W of walls)W.o.visible=cam.position.clone().sub(W.mid).dot(W.n)>-0.05;}
+  const below=cam.position.y<H-0.02;ceil.visible=V3S.ceil&&below;fcG.visible=V3S.fc&&V3S.ceil&&below;
+  r.render(sc,cam);T3.raf=requestAnimationFrame(loop);};
+ if(T3.raf)cancelAnimationFrame(T3.raf);T3.raf=requestAnimationFrame(loop);v3bar();});}
+
 let AROK=null;(async()=>{try{AROK=!!(navigator.xr&&await navigator.xr.isSessionSupported('immersive-ar'));}catch(e){AROK=false;}if(AROK)load3(()=>{});})();
 for(const id of['artxt','arbtn'])$(id).addEventListener('beforexrselect',e=>e.preventDefault());
 document.addEventListener('click',ev=>{const b=ev.target.closest('[data-ar]');if(b)startAR(b.dataset.ar);});
@@ -1050,6 +1172,90 @@ async function startAR(mode){if(!AROK||!window.THREE){if(AROK&&!window.THREE){lo
 function projList(){try{return JSON.parse(localStorage.getItem('kabP')||'{}');}catch(e){return{};}}
 function loadProj(o){if(!o||!o.poly||!o.edges||o.edges.length!==o.poly.length)return toast('فایل پروژه معتبر نیست');S=Object.assign(clone(DEF),o);fixOrient(S);SEL=null;EV.sel=null;store();compute();setVB();go('space');toast('پروژه باز شد');}
 document.addEventListener('change',ev=>{if(ev.target.id!=='pimp')return;const f=ev.target.files[0];if(!f)return;const fr=new FileReader();fr.onload=()=>{try{loadProj(JSON.parse(fr.result));}catch(e){toast('فایل پروژه خوانده نشد');}};fr.readAsText(f);});
+// ---- reference images, custom material, AI
+let CTEX=null;try{CTEX=JSON.parse(localStorage.getItem('kabTex')||'null');}catch(e){}
+function regCustom(){const i=COLORS.findIndex(c=>c[0]==='custom');if(i>=0)COLORS.splice(i,1);if(CTEX)COLORS.push(['custom','سفارشی (عکس)',CTEX.hex,'CUSTOM']);}regCustom();
+function customTex(TH){if(!CTEX)return null;const im=new Image(),t=new TH.Texture(im);im.onload=()=>{t.needsUpdate=true;};im.src=CTEX.url;t.wrapS=t.wrapT=TH.RepeatWrapping;t.encoding=TH.sRGBEncoding;t.repeat.set(1/0.6,1/0.6);return t;}
+let SMP=null;(async()=>{try{if(window.claude&&window.claude.use)SMP=await window.claude.use('sample');}catch(e){}})();
+function pickImg(max,cb){const i=document.createElement('input');i.type='file';i.accept='image/*';i.style.display='none';document.body.appendChild(i);i.onchange=()=>{const f=i.files[0];i.remove();if(!f)return;const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);cb(c);};im.onerror=()=>toast('عکس خوانده نشد');im.src=fr.result;};fr.readAsDataURL(f);};i.click();}
+function refs(){try{return JSON.parse(localStorage.getItem('kabRef')||'{}');}catch(e){return{};}}
+function setRef(k,v){const r=refs();if(v)r[k]=v;else delete r[k];try{localStorage.setItem('kabRef',JSON.stringify(r));}catch(e){toast('حافظه برای ذخیره عکس کافی نیست');}}
+const refKey=it=>(S.title||'-')+'|'+it.k;
+function refSVG(it){const R=refs()[refKey(it)];if(!R)return'';const w=R.w||it.R.len,h=w*R.asp;return `<image href="${R.url}" x="${R.x||0}" y="${-((R.y||0)+h)}" width="${w}" height="${h}" opacity="${R.o==null?.5:R.o}" preserveAspectRatio="none" pointer-events="none"/>`;}
+function refCard(it){const R=refs()[refKey(it)];let h=`<div class="card"><h3>عکس مرجع این نما</h3><p class="row"><button class="btn" data-rf="up">🖼 ${R?'عوض کردن عکس':'گذاشتن عکس مرجع'}</button>${R&&SMP?'<button class="btn p" data-rf="ai">✨ اعمال طرح از روی عکس</button>':''}${R?'<button class="btn d" data-rf="del">حذف عکس</button>':''}</p>`;
+ if(R)h+=`<div class="f"><label>شفافیت ${Math.round((R.o==null?.5:R.o)*100)}٪<input type="range" min="0" max="100" data-rk="o" value="${Math.round((R.o==null?.5:R.o)*100)}"></label><label>عرض عکس (mm)<input type="number" data-rk="w" value="${Math.round(R.w||it.R.len)}"></label><label>جابه‌جایی افقی (mm)<input type="number" data-rk="x" value="${R.x||0}"></label><label>جابه‌جایی عمودی (mm)<input type="number" data-rk="y" value="${R.y||0}"></label></div><p class="hint">عرض عکس را برابر طول واقعی دیوار در عکس بگذارید و با جابه‌جایی آن را روی نما منطبق کنید؛ بعد کابینت‌ها را روی عکس تنظیم کنید.</p>`;
+ return h+'</div>';}
+async function aiFromImg(canvas){if(!SMP)return note('تشخیص خودکار از عکس فقط در نسخه داخل Claude فعال است؛ عکس به‌عنوان مرجع زیر نما گذاشته شد.');
+ try{const lim=await SMP.limits();if(lim&&!lim.images)return note('ارسال عکس برای تحلیل در این نسخه مجاز نیست.');}catch(e){}
+ const blob=await new Promise(r=>canvas.toBlob(r,'image/jpeg',0.8)),L=a=>a.filter(x=>x[0]!=='custom').map(x=>x[0]).join('|');note('در حال تحلیل عکس…');
+ const prompt=`You are an expert kitchen cabinet designer. Study the attached kitchen or cabinet photo and choose the closest option from each fixed list. Reply with ONLY a JSON object:
+{"style":"modern|neoclassic|classic","door":"${L(DOORS)}","handle":"${L(HANDLES)}","colB":"${L(COLORS)}","colW":"${L(COLORS)}","fin":"${L(FINS)}","top":"${L(TOPS)}","hfin":"${L(HFIN)}","note":"one short sentence in Persian describing the design you saw"}
+Door codes: ${DOORS.map(d=>d[0]+'='+d[2]).join(', ')}. Handle codes: ${HANDLES.map(d=>d[0]+'='+d[2]).join(', ')}. Colour codes: ${COLORS.filter(c=>c[0]!=='custom').map(c=>c[0]+'='+c[3]).join(', ')}. Finish codes: ${FINS.map(c=>c[0]+'='+c[2]).join(', ')}. Worktop codes: ${TOPS.map(c=>c[0]+'='+c[3]).join(', ')}. Handle finish: ${HFIN.map(c=>c[0]+'='+c[3]).join(', ')}. colB = lower (base) cabinet fronts, colW = upper (wall) cabinet fronts.`;
+ try{const v=await SMP.json(prompt,{images:[blob],modelTier:'default'});if(!v||typeof v!=='object')throw 0;
+  if(['modern','neoclassic','classic'].includes(v.style))S.style=v.style;for(const[k,arr]of[['door',DOORS],['handle',HANDLES],['colB',COLORS],['colW',COLORS],['fin',FINS],['top',TOPS],['hfin',HFIN]])if(arr.some(x=>x[0]===v[k]))S[k]=v[k];
+  clr(['ds','hd','col','cfg']);store();compute();refresh();note('طرح از روی عکس اعمال شد'+(v.note?': '+v.note:'')+'. برای دقت بیشتر جزئیات را دستی تنظیم کنید.');}
+ catch(e){note(e&&e.code==='not_granted'?'اجازه تحلیل عکس داده نشد.':e&&e.code==='rate_limited'?'کمی بعد دوباره امتحان کنید.':'تحلیل عکس انجام نشد.');}}
+let LASTIMG=null;
+document.addEventListener('click',ev=>{const b=ev.target.closest('[data-rf]');if(!b)return;const a=b.dataset.rf;const it=TAB==='elv'?curRun():(elvList()[0]||null);
+ if(a==='design'||a==='up')pickImg(1400,c=>{LASTIMG=c;if(it)setRef(refKey(it),{url:c.toDataURL('image/jpeg',0.72),asp:c.height/c.width,o:.5,x:0,y:0,w:it.R.len});if(a==='design')aiFromImg(c);else{toast('عکس مرجع گذاشته شد');}refresh();});
+ if(a==='ai'&&it){const R=refs()[refKey(it)];if(!R)return;const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);aiFromImg(c);};im.src=R.url;}
+ if(a==='del'&&it){setRef(refKey(it),null);refresh();}
+ if(a==='tex')pickImg(512,c=>{const g=document.createElement('canvas');g.width=g.height=1;g.getContext('2d').drawImage(c,0,0,1,1);const d=g.getContext('2d').getImageData(0,0,1,1).data,hx='#'+[d[0],d[1],d[2]].map(v=>v.toString(16).padStart(2,'0')).join('');
+  CTEX={url:c.toDataURL('image/jpeg',0.8),hex:hx};try{localStorage.setItem('kabTex',JSON.stringify(CTEX));}catch(e){}regCustom();S.colB=S.colW='custom';clr(['col']);store();compute();refresh();toast('متریال سفارشی روی همه درب‌ها گذاشته شد');});
+ if(a==='texdel'){CTEX=null;try{localStorage.removeItem('kabTex');}catch(e){}regCustom();if(S.colB==='custom')S.colB='white';if(S.colW==='custom')S.colW='white';store();compute();refresh();}});
+document.addEventListener('input',ev=>{const k=ev.target.dataset.rk;if(!k)return;const it=curRun(),r=refs(),R=r[refKey(it)];if(!R)return;R[k]=k==='o'?(+ev.target.value)/100:+ev.target.value;setRef(refKey(it),R);drawElvSVG();});
+// ---- service points editor
+const PT=[['cw','آب سرد','#1b6fd1'],['hw','آب گرم','#d1361b'],['dr','فاضلاب','#6d4c41'],['gas','گاز','#e0a100'],['s','پریز','#455a64'],['s32','پریز اجاق برقی','#8e24aa'],['fr','پریز یخچال','#00897b'],['duct','کانال هود','#78909c'],['sw','کلید برق','#9e9e9e']];
+const PTD={cw:550,hw:550,dr:450,gas:550,s:1100,s32:600,fr:300,duct:2300,sw:1200};
+const MP={e:0,t:'dr',sel:null,drag:null,vb:null};window.__MP=MP;Object.defineProperty(window,'__T3',{get:()=>T3});
+function openMep(e){if(e<0)return toast('هیچ دیواری نیست');MP.e=e;MP.sel=null;MP.vb=null;$('mepd').style.display='flex';drawMep();}
+function mpts(){return(S.pts||(S.pts=[])).map((p,i)=>Object.assign({i},p)).filter(p=>p.e===MP.e);}
+function drawMep(){const e=MP.e,len=eg(S,e).len,H=S.H,E=S.edges[e];
+ if(!MP.vb){MP.vb=fitAsp([-450,-(H+350),len+900,H+800],$('msvg'));$('msvg').setAttribute('viewBox',MP.vb.join(' '));}
+ const px=MP.vb[2]/Math.max(1,$('msvg').clientWidth);let s=`<rect x="0" y="${-H}" width="${len}" height="${H}" fill="#fbfaf7" stroke="#1d1d1f" stroke-width="${px*1.5}"/>`;
+ for(let x=500;x<len;x+=500)s+=`<line x1="${x}" y1="0" x2="${x}" y2="${-H}" stroke="#eee" stroke-width="${px}"/>`;for(let z=500;z<H;z+=500)s+=`<line x1="0" y1="${-z}" x2="${len}" y2="${-z}" stroke="#eee" stroke-width="${px}"/>`;
+ s+=`<line x1="0" y1="${-S.counterH}" x2="${len}" y2="${-S.counterH}" stroke="#8a5a2b" stroke-dasharray="${px*6}" stroke-width="${px}"/><text x="${len+20}" y="${-S.counterH+px*4}" font-size="${px*11}" fill="#8a5a2b">صفحه ${S.counterH}</text>`;
+ for(const w of E.win)s+=`<rect x="${w.x}" y="${-(w.sill+w.h)}" width="${w.w}" height="${w.h}" fill="#dbe9f3" stroke="#1b6fd1" stroke-width="${px}"/>`;
+ for(const d of E.door)s+=`<rect x="${d.x}" y="${-d.h}" width="${d.w}" height="${d.h}" fill="#e3f1e7" stroke="#2e8b57" stroke-width="${px}"/>`;
+ s+=`<text x="${len/2}" y="${-H-px*14}" font-size="${px*14}" text-anchor="middle" fill="#1d1d1f" font-weight="700">دیوار ${LET(e)} — طول ${len}</text><text x="0" y="${px*16}" font-size="${px*11}" fill="#888">گوشه چپ</text><text x="${len}" y="${px*16}" font-size="${px*11}" fill="#888" text-anchor="end">گوشه راست</text>`;
+ const dim=(x1,y1,x2,y2,t,o)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#1f7a4d" stroke-width="${px*1.2}" stroke-dasharray="${px*4}"/><text x="${(x1+x2)/2+(o||0)}" y="${(y1+y2)/2-px*5}" font-size="${px*12}" fill="#1f7a4d" text-anchor="middle" font-weight="700">${t}</text>`;
+ for(const p of mpts()){const c=(PT.find(q=>q[0]===p.t)||PT[0]),on=MP.sel===p.i;
+  if(on)s+=dim(0,-p.h,p.x,-p.h,p.x)+dim(p.x,-p.h,len,-p.h,len-p.x)+dim(p.x,0,p.x,-p.h,'',0)+`<text x="${p.x+px*8}" y="${-p.h/2}" font-size="${px*12}" fill="#1f7a4d" font-weight="700">${p.h}</text>`;
+  s+=`<g data-mp="${p.i}" style="cursor:move"><circle cx="${p.x}" cy="${-p.h}" r="${px*(on?15:12)}" fill="${c[2]}" stroke="${on?'#e08a2b':'#fff'}" stroke-width="${px*3}"/><text x="${p.x}" y="${-p.h+px*4}" font-size="${px*9}" text-anchor="middle" fill="#fff" font-weight="700" pointer-events="none">${PTC[p.t][0]}</text></g>`;}
+ $('mg').innerHTML=s;
+ const ws=S.poly.map((_,i)=>i).filter(i=>S.edges[i].w);
+ $('mepTop').innerHTML=`<div class="row" style="justify-content:space-between"><h3 style="margin:0">نقاط تأسیسات روی دیوار</h3><button class="btn" data-mq="close">✕ بستن</button></div><div class="chips" style="margin-top:6px">${ws.map(i=>`<button class="btn ${i===e?'on':''}" data-mq="wall" data-k="${i}">دیوار ${LET(i)}</button>`).join('')}</div>
+  <div class="chips" style="margin-top:6px">${PT.map(([k,t,c])=>`<button class="btn ${MP.t===k?'on':''}" data-mq="type" data-k="${k}"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${c};margin-inline-end:4px"></span>${t}</button>`).join('')}</div>
+  <p class="hint" style="margin:4px 0 0">نوع نقطه را انتخاب کنید و روی دیوار بزنید. نقطه را بکشید یا اندازه دقیقش را پایین بنویسید (از گوشه چپ دیوار و از کف تمام‌شده).</p>`;
+ const sp=MP.sel!=null&&S.pts[MP.sel];let h='';
+ if(sp)h+=`<div class="card" style="margin:0 0 8px"><div class="f"><label>نوع<select data-mk="t">${PT.map(([k,t])=>`<option value="${k}"${sp.t===k?' selected':''}>${t}</option>`).join('')}</select></label><label>فاصله از گوشه چپ (mm)<input type="number" data-mk="x" value="${sp.x}"></label><label>فاصله از گوشه راست (mm)<input type="number" data-mk="xr" value="${len-sp.x}"></label><label>ارتفاع از کف (mm)<input type="number" data-mk="h" value="${sp.h}"></label></div><p class="row" style="margin-top:6px"><button class="btn d" data-mq="del">🗑 حذف نقطه</button></p></div>`;
+ const all=S.pts||[];h+=`<p class="row"><button class="btn p" data-mq="apply" ${all.length?'':'disabled'}>✨ پیشنهاد چیدمان بر اساس نقاط</button><span class="hint">${all.length} نقطه ثبت شده</span></p>`;
+ $('mepSide').innerHTML=h;}
+function mworld(ev){const sv=$('msvg'),pt=sv.createSVGPoint();pt.x=ev.clientX;pt.y=ev.clientY;const q=pt.matrixTransform(sv.getScreenCTM().inverse());return[q.x,-q.y];}
+$('msvg').addEventListener('pointerdown',ev=>{const g=ev.target.closest('[data-mp]'),w=mworld(ev),len=eg(S,MP.e).len,cl=(x,a,b)=>Math.max(a,Math.min(b,Math.round(x/10)*10));
+ if(g){MP.sel=+g.dataset.mp;MP.drag={moved:0};try{$('msvg').setPointerCapture(ev.pointerId);}catch(_){}drawMep();ev.preventDefault();return;}
+ if(w[0]<-50||w[0]>len+50||w[1]<-50||w[1]>S.H+50){MP.sel=null;drawMep();return;}
+ (S.pts||(S.pts=[])).push({e:MP.e,t:MP.t,x:cl(w[0],0,len),h:cl(w[1],0,S.H)});MP.sel=S.pts.length-1;store();compute();drawMep();});
+$('msvg').addEventListener('pointermove',ev=>{if(!MP.drag||MP.sel==null)return;const w=mworld(ev),p=S.pts[MP.sel],len=eg(S,MP.e).len;MP.drag.moved=1;p.x=Math.max(0,Math.min(len,Math.round(w[0]/10)*10));p.h=Math.max(0,Math.min(S.H,Math.round(w[1]/10)*10));drawMep();});
+$('msvg').addEventListener('pointerup',()=>{if(MP.drag){MP.drag=null;store();compute();drawMep();}});
+$('mepd').addEventListener('click',ev=>{const b=ev.target.closest('[data-mq]');if(!b)return;const a=b.dataset.mq;
+ if(a==='close'){$('mepd').style.display='none';compute();refresh();return;}
+ if(a==='wall'){MP.e=+b.dataset.k;MP.sel=null;MP.vb=null;}
+ if(a==='type'){MP.t=b.dataset.k;MP.sel=null;}
+ if(a==='del'&&MP.sel!=null){S.pts.splice(MP.sel,1);MP.sel=null;store();compute();}
+ if(a==='apply'){applyPts();$('mepd').style.display='none';return;}
+ drawMep();});
+$('mepd').addEventListener('change',ev=>{const k=ev.target.dataset.mk;if(!k||MP.sel==null)return;const p=S.pts[MP.sel],v=ev.target.value,len=eg(S,MP.e).len;
+ if(k==='t')p.t=v;else if(k==='x')p.x=Math.max(0,Math.min(len,+v||0));else if(k==='xr')p.x=Math.max(0,Math.min(len,len-(+v||0)));else if(k==='h')p.h=Math.max(0,Math.min(S.H,+v||0));store();compute();drawMep();});
+function applyPts(){const P=S.pts||[],by=t=>P.filter(p=>p.t===t),msg=[];if(!P.length)return;
+ const dr=by('dr'),wat=dr.concat(by('cw'),by('hw'));if(wat.length){const e=(dr[0]||wat[0]).e,ps=wat.filter(p=>p.e===e);S.sink={e,x:Math.round(ps.reduce((a,p)=>a+p.x,0)/ps.length)};S.edges[e].w=1;S.edges[e].cab=1;msg.push('سینک روی دیوار '+LET(e));}
+ const g=by('gas')[0]||by('s32')[0]||by('duct')[0];if(g){S.hob={e:g.e,x:Math.round(g.x)};S.edges[g.e].w=1;S.edges[g.e].cab=1;if(g.t==='s32')S.hobType='elec';msg.push('گاز روی دیوار '+LET(g.e));}
+ const f=by('fr')[0];if(f){S.fr={e:f.e,x:Math.round(f.x)};S.edges[f.e].w=1;S.edges[f.e].cab=1;msg.push('یخچال روی دیوار '+LET(f.e));}
+ S.man={};fixSel();
+ const nb=()=>design(S).warns.filter(w=>/تداخل|بیرون/.test(w)).length;
+ for(const k of['sink','hob','fr']){if(!msg.length)break;const M=S[k],x0=M.x,L=eg(S,M.e).len;let best=[nb(),x0];if(!best[0])continue;
+  for(let d=50;d<=L&&best[0];d+=50)for(const sg of[1,-1]){const x=x0+sg*d;if(x<0||x>L)continue;M.x=x;const c=nb();if(c<best[0])best=[c,x];if(!c)break;}M.x=best[1];}
+ store();compute();SEL=null;go('cab');note(msg.length?'چیدمان پیشنهادی ساخته شد: '+msg.join('، ')+'. هر چیزی را خواستید عوض کنید.':'نقطه آب، گاز یا پریز یخچال برای پیشنهاد پیدا نشد.');}
 function go(t){if(DRAW&&t!=='space'){DRAW=null;setVB();}TAB=t;SEL=null;EV.sel=null;EV.drag=null;document.querySelectorAll('#nav button').forEach(x=>x.classList.toggle('on',x.dataset.t===t));
  $('edwrap').style.display=t==='space'||t==='cab'?'':'none';$('t-dwg').classList.toggle('on',t==='dwg');$('t-adv').classList.toggle('on',t==='adv');$('t-elv').classList.toggle('on',t==='elv');
  $('t-cost').classList.toggle('on',t==='cost');$('t-v3').classList.toggle('on',t==='v3');if(t==='v3')draw3();
